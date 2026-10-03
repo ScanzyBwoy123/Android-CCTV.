@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Android CCTV</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <header class="top-bar">
+            <h1>Android CCTV</h1>
+            <span id="connectionStatus">
+                Offline
+            </span>
+        </header>
+
+        <main>
+
+            <section class="welcome-card">
+
+                <h2>Your Security Camera</h2>
+
+                <p>
+                    Use an Android phone as a camera
+                    and watch it remotely from your iPhone.
+                </p>
+
+            </section>
+
+
+            <section class="camera-card">
+
+                <video
+                    id="cameraPreview"
+                    autoplay
+                    playsinline
+                    muted
+                ></video>
+
+                <div class="camera-placeholder" id="cameraPlaceholder">
+
+                    <div class="camera-icon">
+                        📷
+                    </div>
+
+                    <h3>Camera is off</h3>
+
+                    <p>
+                        Start the camera to begin.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <section class="controls">
+
+                <button
+                    id="startCameraButton"
+                    class="primary-button"
+                >
+                    📷 Start Camera
+                </button>
+
+                <button
+                    id="stopCameraButton"
+                    class="secondary-button"
+                    disabled
+                >
+                    ⛔ Stop Camera
+                </button>
+
+            </section>
+
+
+            <section class="device-card">
+
+                <h3>Device</h3>
+
+                <div class="device-row">
+                    <span>Status</span>
+                    <strong id="deviceStatus">
+                        Camera Offline
+                    </strong>
+                </div>
+
+                <div class="device-row">
+                    <span>Connection</span>
+                    <strong id="connectionType">
+                        Not connected
+                    </strong>
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <script src="app.js"></script>
+
+</body>
+</html>
