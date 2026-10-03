@@ -1198,11 +1198,23 @@ async function sendSignalingMessage(
             event:
                 "signal",
 
-            payload:
-                message
+            payload: {
+                ...message,
+                cameraId: CAMERA_ID
+            }
 
         });
 
+    } catch (error) {
+
+        console.error(
+            "Signaling error:",
+            error
+        );
+
+    }
+
+}
 
         console.log(
             "Signal sent:",
