@@ -1179,23 +1179,19 @@ async function sendSignalingMessage(
 
     }
 
-
     if (!signalingChannel) {
 
         return;
 
     }
 
-
     try {
 
         await signalingChannel.send({
 
-            type:
-                "broadcast",
+            type: "broadcast",
 
-            event:
-                "signal",
+            event: "signal",
 
             payload: {
                 ...message,
@@ -1203,7 +1199,6 @@ async function sendSignalingMessage(
             }
 
         });
-
 
         console.log(
             "Signal sent:",
@@ -1220,15 +1215,6 @@ async function sendSignalingMessage(
     }
 
 }
-
-        console.error(
-            "Signal send error:",
-            error
-        );
-
-    }
-}
-
 
 /* =========================================
    CAMERA COMMAND
