@@ -1964,27 +1964,29 @@ function createPeerConnection(
 
         };
 
+peerConnection.onicecandidate =
+    function (event) {
 
-    peerConnection.onicecandidate =
-        function (event) {
+        if (
+            event.candidate
+        ) {
 
-            if (
-                event.candidate
-            ) {
+            sendSignalingMessage({
 
-                sendSignalingMessage({
+                type:
+                    "candidate",
 
-                    type:
-                        "candidate",
+                candidate:
+                    event.candidate,
 
-                    candidate:
-                        event.candidate
+                targetCameraId:
+                    CAMERA_ID
 
-                });
+            });
 
-            }
+        }
 
-        };
+    };
 
 
     peerConnection.onconnectionstatechange =
@@ -2118,20 +2120,16 @@ async function handleIncomingOffer(
 
         await sendSignalingMessage({
 
-            type:
-                "answer",
+    type:
+        "answer",
 
-            answer:
-                peerConnection.localDescription
+    answer:
+        peerConnection.localDescription,
 
-        });
+    targetCameraId:
+        CAMERA_ID
 
-
-        setViewerStatus(
-            "Connecting video..."
-        );
-
-
+});
     } catch (error) {
 
         console.error(
