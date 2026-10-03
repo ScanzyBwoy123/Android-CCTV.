@@ -136,7 +136,9 @@ function connectToSignalingServer() {
         return;
     }
 
-    setStatus("Connecting to signaling server...");
+    setStatus(
+        "Connecting to signaling server..."
+    );
 
     signalingSocket = new WebSocket(
         SIGNALING_SERVER +
@@ -152,7 +154,7 @@ function connectToSignalingServer() {
         );
 
         setStatus(
-            "Connected to signaling server"
+            "Signaling server connected"
         );
     };
 
@@ -173,7 +175,7 @@ function connectToSignalingServer() {
             if (message.type === "joined") {
 
                 setStatus(
-                    "Connected to CCTV signaling"
+                    "Signaling server connected"
                 );
 
                 return;
@@ -210,10 +212,10 @@ function connectToSignalingServer() {
             }
 
 
-            if (message.type === "peer-joined") {
+            if (message.type === "pong") {
 
                 console.log(
-                    "Another device joined"
+                    "Signaling server pong"
                 );
 
                 return;
@@ -241,11 +243,27 @@ function connectToSignalingServer() {
         );
     };
 
+
     signalingSocket.onclose = function (event) {
-        console.log("SIGNALING SOCKET CLOSED");
-        console.log("Close code:", event.code);
-        console.log("Close reason:", event.reason);
-        console.log("Was clean:", event.wasClean);
+
+        console.log(
+            "SIGNALING SOCKET CLOSED"
+        );
+
+        console.log(
+            "Close code:",
+            event.code
+        );
+
+        console.log(
+            "Close reason:",
+            event.reason
+        );
+
+        console.log(
+            "Was clean:",
+            event.wasClean
+        );
 
         setStatus(
             "Signaling server disconnected (" +
@@ -255,15 +273,19 @@ function connectToSignalingServer() {
 
         signalingSocket = null;
     };
+}
 
-} // CLOSE connectToSignalingServer()
 
+/* =========================================
+   SEND SIGNALING MESSAGE
+========================================= */
 
 function sendSignalingMessage(message) {
 
     if (
         signalingSocket &&
-        signalingSocket.readyState === WebSocket.OPEN
+        signalingSocket.readyState ===
+        WebSocket.OPEN
     ) {
 
         signalingSocket.send(
@@ -385,11 +407,26 @@ startCameraButton.addEventListener(
     "click",
     async function () {
 
+        console.log(
+            "START CAMERA BUTTON CLICKED"
+        );
+
         try {
 
             setStatus(
                 "Requesting camera permission..."
             );
+
+
+            if (
+                !navigator.mediaDevices ||
+                !navigator.mediaDevices.getUserMedia
+            ) {
+
+                throw new Error(
+                    "Camera API is not available"
+                );
+            }
 
 
             localStream =
@@ -403,6 +440,11 @@ startCameraButton.addEventListener(
 
                     audio: true
                 });
+
+
+            console.log(
+                "Camera stream received"
+            );
 
 
             localVideo.srcObject =
@@ -425,7 +467,10 @@ startCameraButton.addEventListener(
 
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                "Camera error:",
+                error
+            );
 
             setStatus(
                 "Camera error: " +
@@ -503,15 +548,13 @@ createOfferButton.addEventListener(
 
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                "Offer error:",
+                error
+            );
 
             setStatus(
                 "Offer error: " +
-                error.message
-            );
-
-            alert(
-                "Could not create connection.\n\n" +
                 error.message
             );
         }
@@ -527,53 +570,58 @@ async function handleIncomingOffer(message) {
 
     try {
 
-        if (!viewerSection.classList.contains("hidden")) {
+        if (
+            viewerSection.classList.contains("hidden")
+        ) {
 
-            if (peerConnection) {
-
-                peerConnection.close();
-            }
-
-
-            setStatus(
-                "Camera found. Connecting..."
-            );
-
-
-            createPeerConnection(true);
-
-
-            await peerConnection.setRemoteDescription(
-                message.offer
-            );
-
-
-            const answer =
-                await peerConnection.createAnswer();
-
-
-            await peerConnection.setLocalDescription(
-                answer
-            );
-
-
-            sendSignalingMessage({
-
-                type: "answer",
-
-                answer:
-                    peerConnection.localDescription
-            });
-
-
-            answerOutput.value =
-                "Automatic signaling enabled";
-
-
-            setStatus(
-                "Viewer connected to camera"
-            );
+            return;
         }
+
+
+        if (peerConnection) {
+
+            peerConnection.close();
+        }
+
+
+        setStatus(
+            "Camera found. Connecting..."
+        );
+
+
+        createPeerConnection(true);
+
+
+        await peerConnection.setRemoteDescription(
+            message.offer
+        );
+
+
+        const answer =
+            await peerConnection.createAnswer();
+
+
+        await peerConnection.setLocalDescription(
+            answer
+        );
+
+
+        sendSignalingMessage({
+
+            type: "answer",
+
+            answer:
+                peerConnection.localDescription
+        });
+
+
+        answerOutput.value =
+            "Automatic signaling enabled";
+
+
+        setStatus(
+            "Viewer connected to camera"
+        );
 
     } catch (error) {
 
@@ -653,8 +701,6 @@ async function handleIncomingCandidate(message) {
 
 /* =========================================
    OLD MANUAL BUTTONS
-   Kept disabled because signaling
-   is now automatic.
 ========================================= */
 
 connectCameraButton.addEventListener(
@@ -662,9 +708,8 @@ connectCameraButton.addEventListener(
     function () {
 
         alert(
-            "Manual connection is no longer required. Signaling is automatic."
+            "Manual connection is no longer required."
         );
-
     }
 );
 
@@ -674,9 +719,8 @@ createAnswerButton.addEventListener(
     function () {
 
         alert(
-            "Manual answer creation is no longer required. Signaling is automatic."
+            "Manual answer creation is no longer required."
         );
-
     }
 );
 
@@ -754,11 +798,7 @@ viewerSection.classList.add("hidden");
 
 createOfferButton.disabled = true;
 
-copyOfferButton.disabled = true;
-
 connectCameraButton.disabled = true;
-
-copyAnswerButton.disabled = true;
 
 setStatus("Ready");
 
