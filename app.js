@@ -241,21 +241,22 @@ function connectToSignalingServer() {
         );
     };
 
-
     signalingSocket.onclose = function (event) {
-    console.log("SIGNALING SOCKET CLOSED");
-    console.log("Close code:", event.code);
-    console.log("Close reason:", event.reason);
-    console.log("Was clean:", event.wasClean);
+        console.log("SIGNALING SOCKET CLOSED");
+        console.log("Close code:", event.code);
+        console.log("Close reason:", event.reason);
+        console.log("Was clean:", event.wasClean);
 
-    setStatus(
-        "Signaling server disconnected (" +
-        event.code +
-        ")"
-    );
+        setStatus(
+            "Signaling server disconnected (" +
+            event.code +
+            ")"
+        );
 
-    signalingSocket = null;
-};
+        signalingSocket = null;
+    };
+
+} // CLOSE connectToSignalingServer()
 
 
 function sendSignalingMessage(message) {
