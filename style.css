@@ -170,3 +170,127 @@ button:disabled {
     }
 
 }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: white;
+    min-height: 100vh;
+}
+
+.app {
+    width: 100%;
+    max-width: 750px;
+    margin: auto;
+    padding-bottom: 50px;
+}
+
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #111827;
+    border-bottom: 1px solid #334155;
+}
+
+.top-bar h1 {
+    font-size: 20px;
+}
+
+#connectionStatus {
+    color: #f87171;
+    font-size: 13px;
+}
+
+main {
+    padding: 20px;
+}
+
+.mode-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.mode-selector button {
+    flex: 1;
+}
+
+button {
+    border: none;
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.primary-button {
+    width: 100%;
+    background: #2563eb;
+    color: white;
+}
+
+.mode-selector button {
+    background: #334155;
+    color: white;
+}
+
+.mode {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 18px;
+}
+
+.hidden {
+    display: none;
+}
+
+.mode h2 {
+    margin-bottom: 10px;
+}
+
+.mode p {
+    color: #cbd5e1;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+video {
+    width: 100%;
+    background: #020617;
+    border-radius: 15px;
+    display: block;
+    min-height: 220px;
+    object-fit: cover;
+    margin-bottom: 15px;
+}
+
+textarea {
+    width: 100%;
+    min-height: 150px;
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid #475569;
+    background: #020617;
+    color: white;
+    font-family: monospace;
+    resize: vertical;
+}
+
+h3 {
+    margin-top: 25px;
+}
+
+button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
