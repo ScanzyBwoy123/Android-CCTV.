@@ -1,9 +1,12 @@
 let localStream = null;
 let peerConnection = null;
-let signalingSocket = null;
+let signalingChannel = null;
 
-const SIGNALING_SERVER =
-    "wss://android-cctv-signaling.scanzybwoy8.workers.dev";
+const SUPABASE_URL =
+    "https://vsdujfqygetvwgbfrjzj.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+    "sb_publishable_awDxxCnxSAoB0o5-nhKh7A_9bZ_aYRo";
 
 const ROOM_ID = "android-cctv-demo";
 
@@ -14,6 +17,22 @@ const configuration = {
         }
     ]
 };
+
+
+/* =========================================
+   SUPABASE
+========================================= */
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_PUBLISHABLE_KEY
+    );
+
+
+/* =========================================
+   DOM ELEMENTS
+========================================= */
 
 const connectionStatus =
     document.getElementById("connectionStatus");
@@ -67,8 +86,15 @@ const copyAnswerButton =
     document.getElementById("copyAnswerButton");
 
 
+/* =========================================
+   STATUS
+========================================= */
+
 function setStatus(message) {
-    connectionStatus.textContent = message;
+
+    connectionStatus.textContent =
+        message;
+
     console.log(message);
 }
 
@@ -80,9 +106,11 @@ function setStatus(message) {
 function showCameraMode() {
 
     cameraSection.classList.remove("hidden");
+
     viewerSection.classList.add("hidden");
 
     cameraModeButton.classList.add("active");
+
     viewerModeButton.classList.remove("active");
 
     setStatus("Camera mode");
@@ -94,9 +122,11 @@ function showCameraMode() {
 function showViewerMode() {
 
     cameraSection.classList.add("hidden");
+
     viewerSection.classList.remove("hidden");
 
     viewerModeButton.classList.add("active");
+
     cameraModeButton.classList.remove("active");
 
     setStatus("Viewer mode");
@@ -110,6 +140,7 @@ cameraModeButton.addEventListener(
     showCameraMode
 );
 
+
 viewerModeButton.addEventListener(
     "click",
     showViewerMode
@@ -117,162 +148,169 @@ viewerModeButton.addEventListener(
 
 
 /* =========================================
-   SIGNALING SERVER
+   SUPABASE REALTIME SIGNALING
 ========================================= */
 
-function connectToSignalingServer() {
+async function connectToSignalingServer() {
 
-    if (
-        signalingSocket &&
-        signalingSocket.readyState === WebSocket.OPEN
-    ) {
-        return;
-    }
-
-    if (
-        signalingSocket &&
-        signalingSocket.readyState === WebSocket.CONNECTING
-    ) {
-        return;
-    }
-
-    setStatus(
-        "Connecting to signaling server..."
-    );
-
-    signalingSocket = new WebSocket(
-        SIGNALING_SERVER +
-        "?room=" +
-        encodeURIComponent(ROOM_ID)
-    );
-
-
-    signalingSocket.onopen = function () {
+    if (signalingChannel) {
 
         console.log(
-            "Connected to signaling server"
+            "Supabase signaling already connected"
         );
 
-        setStatus(
-            "Signaling server connected"
+        return;
+    }
+
+
+    setStatus(
+        "Connecting to Supabase..."
+    );
+
+
+    signalingChannel =
+        supabaseClient.channel(
+            "cctv:" + ROOM_ID,
+            {
+                config: {
+                    broadcast: {
+                        self: false
+                    }
+                }
+            }
         );
-    };
 
 
-    signalingSocket.onmessage = async function (event) {
+    signalingChannel.on(
+        "broadcast",
+        {
+            event: "signal"
+        },
+        async function (message) {
 
-        try {
+            try {
 
-            const message =
-                JSON.parse(event.data);
+                const data =
+                    message.payload;
+
+                console.log(
+                    "Supabase signal received:",
+                    data.type
+                );
+
+
+                if (data.type === "offer") {
+
+                    await handleIncomingOffer(
+                        data
+                    );
+
+                    return;
+                }
+
+
+                if (data.type === "answer") {
+
+                    await handleIncomingAnswer(
+                        data
+                    );
+
+                    return;
+                }
+
+
+                if (data.type === "candidate") {
+
+                    await handleIncomingCandidate(
+                        data
+                    );
+
+                    return;
+                }
+
+            } catch (error) {
+
+                console.error(
+                    "Supabase message error:",
+                    error
+                );
+            }
+        }
+    );
+
+
+    signalingChannel.subscribe(
+        function (status, error) {
 
             console.log(
-                "Signaling message:",
-                message.type
+                "Supabase channel status:",
+                status
             );
 
 
-            if (message.type === "joined") {
+            if (status === "SUBSCRIBED") {
 
                 setStatus(
                     "Signaling server connected"
                 );
 
-                return;
-            }
-
-
-            if (message.type === "offer") {
-
-                await handleIncomingOffer(
-                    message
+                console.log(
+                    "Supabase Realtime connected"
                 );
 
                 return;
             }
 
 
-            if (message.type === "answer") {
+            if (
+                status === "CHANNEL_ERROR"
+            ) {
 
-                await handleIncomingAnswer(
-                    message
+                console.error(
+                    "Supabase channel error:",
+                    error
+                );
+
+                setStatus(
+                    "Supabase channel error"
                 );
 
                 return;
             }
 
 
-            if (message.type === "candidate") {
+            if (
+                status === "TIMED_OUT"
+            ) {
 
-                await handleIncomingCandidate(
-                    message
+                console.error(
+                    "Supabase channel timed out"
+                );
+
+                setStatus(
+                    "Supabase connection timed out"
                 );
 
                 return;
             }
 
 
-            if (message.type === "pong") {
+            if (
+                status === "CLOSED"
+            ) {
 
                 console.log(
-                    "Signaling server pong"
+                    "Supabase channel closed"
                 );
 
-                return;
+                setStatus(
+                    "Supabase signaling disconnected"
+                );
+
+                signalingChannel = null;
             }
-
-        } catch (error) {
-
-            console.error(
-                "Signaling message error:",
-                error
-            );
         }
-    };
-
-
-    signalingSocket.onerror = function (error) {
-
-        console.error(
-            "Signaling error:",
-            error
-        );
-
-        setStatus(
-            "Signaling server error"
-        );
-    };
-
-
-    signalingSocket.onclose = function (event) {
-
-        console.log(
-            "SIGNALING SOCKET CLOSED"
-        );
-
-        console.log(
-            "Close code:",
-            event.code
-        );
-
-        console.log(
-            "Close reason:",
-            event.reason
-        );
-
-        console.log(
-            "Was clean:",
-            event.wasClean
-        );
-
-        setStatus(
-            "Signaling server disconnected (" +
-            event.code +
-            ")"
-        );
-
-        signalingSocket = null;
-    };
+    );
 }
 
 
@@ -280,27 +318,45 @@ function connectToSignalingServer() {
    SEND SIGNALING MESSAGE
 ========================================= */
 
-function sendSignalingMessage(message) {
+async function sendSignalingMessage(
+    message
+) {
 
-    if (
-        signalingSocket &&
-        signalingSocket.readyState ===
-        WebSocket.OPEN
-    ) {
-
-        signalingSocket.send(
-            JSON.stringify(message)
-        );
+    if (!signalingChannel) {
 
         console.log(
-            "Sent signaling message:",
-            message.type
+            "Supabase channel is not connected"
         );
 
-    } else {
+        return;
+    }
+
+
+    try {
+
+        const result =
+            await signalingChannel.send({
+
+                type: "broadcast",
+
+                event: "signal",
+
+                payload: message
+
+            });
+
 
         console.log(
-            "Signaling socket is not connected"
+            "Sent Supabase signal:",
+            message.type,
+            result
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Supabase send error:",
+            error
         );
     }
 }
@@ -310,7 +366,9 @@ function sendSignalingMessage(message) {
    PEER CONNECTION
 ========================================= */
 
-function createPeerConnection(isViewer) {
+function createPeerConnection(
+    isViewer
+) {
 
     peerConnection =
         new RTCPeerConnection(
@@ -343,6 +401,7 @@ function createPeerConnection(isViewer) {
                 "Remote media received"
             );
 
+
             if (
                 event.streams &&
                 event.streams[0]
@@ -350,6 +409,7 @@ function createPeerConnection(isViewer) {
 
                 remoteVideo.srcObject =
                     event.streams[0];
+
 
                 remoteVideo
                     .play()
@@ -376,6 +436,7 @@ function createPeerConnection(isViewer) {
 
                     candidate:
                         event.candidate
+
                 });
             }
         };
@@ -387,10 +448,12 @@ function createPeerConnection(isViewer) {
             const state =
                 peerConnection.connectionState;
 
+
             console.log(
-                "Connection state:",
+                "WebRTC connection state:",
                 state
             );
+
 
             setStatus(
                 "Connection: " + state
@@ -411,6 +474,7 @@ startCameraButton.addEventListener(
             "START CAMERA BUTTON CLICKED"
         );
 
+
         try {
 
             setStatus(
@@ -430,16 +494,18 @@ startCameraButton.addEventListener(
 
 
             localStream =
-                await navigator.mediaDevices.getUserMedia({
+                await navigator.mediaDevices
+                    .getUserMedia({
 
-                    video: {
-                        facingMode: {
-                            ideal: "environment"
-                        }
-                    },
+                        video: {
+                            facingMode: {
+                                ideal: "environment"
+                            }
+                        },
 
-                    audio: true
-                });
+                        audio: true
+
+                    });
 
 
             console.log(
@@ -472,10 +538,12 @@ startCameraButton.addEventListener(
                 error
             );
 
+
             setStatus(
                 "Camera error: " +
                 error.message
             );
+
 
             alert(
                 "Unable to access camera.\n\n" +
@@ -506,6 +574,41 @@ createOfferButton.addEventListener(
             }
 
 
+            if (!signalingChannel) {
+
+                setStatus(
+                    "Waiting for signaling connection..."
+                );
+
+                await connectToSignalingServer();
+
+                await new Promise(
+                    function (resolve) {
+
+                        const check =
+                            setInterval(
+                                function () {
+
+                                    if (
+                                        signalingChannel
+                                    ) {
+
+                                        clearInterval(
+                                            check
+                                        );
+
+                                        resolve();
+                                    }
+
+                                },
+                                200
+                            );
+
+                    }
+                );
+            }
+
+
             if (peerConnection) {
 
                 peerConnection.close();
@@ -529,21 +632,22 @@ createOfferButton.addEventListener(
             );
 
 
-            sendSignalingMessage({
+            await sendSignalingMessage({
 
                 type: "offer",
 
                 offer:
                     peerConnection.localDescription
+
             });
 
 
             offerOutput.value =
-                "Automatic signaling enabled";
+                "Camera connection sent automatically";
 
 
             setStatus(
-                "Camera offer sent automatically"
+                "Camera connection sent"
             );
 
         } catch (error) {
@@ -552,6 +656,7 @@ createOfferButton.addEventListener(
                 "Offer error:",
                 error
             );
+
 
             setStatus(
                 "Offer error: " +
@@ -566,13 +671,21 @@ createOfferButton.addEventListener(
    VIEWER RECEIVES OFFER
 ========================================= */
 
-async function handleIncomingOffer(message) {
+async function handleIncomingOffer(
+    message
+) {
 
     try {
 
         if (
-            viewerSection.classList.contains("hidden")
+            viewerSection.classList.contains(
+                "hidden"
+            )
         ) {
+
+            console.log(
+                "Offer received but this device is not in Viewer mode"
+            );
 
             return;
         }
@@ -606,17 +719,18 @@ async function handleIncomingOffer(message) {
         );
 
 
-        sendSignalingMessage({
+        await sendSignalingMessage({
 
             type: "answer",
 
             answer:
                 peerConnection.localDescription
+
         });
 
 
         answerOutput.value =
-            "Automatic signaling enabled";
+            "Viewer response sent automatically";
 
 
         setStatus(
@@ -630,6 +744,7 @@ async function handleIncomingOffer(message) {
             error
         );
 
+
         setStatus(
             "Viewer connection error"
         );
@@ -641,7 +756,9 @@ async function handleIncomingOffer(message) {
    CAMERA RECEIVES ANSWER
 ========================================= */
 
-async function handleIncomingAnswer(message) {
+async function handleIncomingAnswer(
+    message
+) {
 
     try {
 
@@ -675,7 +792,9 @@ async function handleIncomingAnswer(message) {
    ICE CANDIDATE
 ========================================= */
 
-async function handleIncomingCandidate(message) {
+async function handleIncomingCandidate(
+    message
+) {
 
     try {
 
@@ -739,6 +858,7 @@ copyOfferButton.addEventListener(
                 offerOutput.value
             );
 
+
             setStatus(
                 "Information copied"
             );
@@ -750,6 +870,7 @@ copyOfferButton.addEventListener(
             document.execCommand(
                 "copy"
             );
+
 
             setStatus(
                 "Information copied"
@@ -769,6 +890,7 @@ copyAnswerButton.addEventListener(
                 answerOutput.value
             );
 
+
             setStatus(
                 "Information copied"
             );
@@ -780,6 +902,7 @@ copyAnswerButton.addEventListener(
             document.execCommand(
                 "copy"
             );
+
 
             setStatus(
                 "Information copied"
@@ -793,13 +916,27 @@ copyAnswerButton.addEventListener(
    INITIAL STATE
 ========================================= */
 
-cameraSection.classList.remove("hidden");
-viewerSection.classList.add("hidden");
+cameraSection.classList.remove(
+    "hidden"
+);
 
-createOfferButton.disabled = true;
+viewerSection.classList.add(
+    "hidden"
+);
 
-connectCameraButton.disabled = true;
+createOfferButton.disabled =
+    true;
 
-setStatus("Ready");
+connectCameraButton.disabled =
+    true;
+
+setStatus(
+    "Ready"
+);
+
+
+/* =========================================
+   CONNECT TO SUPABASE
+========================================= */
 
 connectToSignalingServer();
