@@ -1169,7 +1169,6 @@ setInterval(
 /* =========================================
    SEND SIGNAL
 ========================================= */
-
 async function sendSignalingMessage(
     message
 ) {
@@ -1205,16 +1204,6 @@ async function sendSignalingMessage(
 
         });
 
-    } catch (error) {
-
-        console.error(
-            "Signaling error:",
-            error
-        );
-
-    }
-
-}
 
         console.log(
             "Signal sent:",
@@ -1222,6 +1211,15 @@ async function sendSignalingMessage(
         );
 
     } catch (error) {
+
+        console.error(
+            "Signal send error:",
+            error
+        );
+
+    }
+
+}
 
         console.error(
             "Signal send error:",
@@ -1887,6 +1885,13 @@ async function createCameraOffer() {
         CAMERA_ID
 
 });
+
+
+setStatus(
+    "Waiting for viewer..."
+);
+
+}
 /* =========================================
    PEER CONNECTION
 ========================================= */
