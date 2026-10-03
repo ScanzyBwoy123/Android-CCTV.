@@ -154,16 +154,47 @@
             id="viewerMode"
             class="mode hidden"
         >
+<h2>
+    My Cameras
+</h2>
 
-            <h2>
-                My Cameras
-            </h2>
+<p>
+    Select a camera to start watching.
+</p>
 
-            <p>
-                Select a camera to start watching.
-            </p>
+<div
+    class="add-camera-card"
+>
 
+    <h3>
+        Add Camera
+    </h3>
 
+    <p>
+        Enter the Camera ID shown on your Android camera.
+    </p>
+
+    <input
+        type="text"
+        id="cameraIdInput"
+        placeholder="Example: CAM-K8P4XZ"
+        autocomplete="off"
+    >
+
+    <button
+        type="button"
+        id="addCameraButton"
+        class="primary-button"
+    >
+        ➕ Add Camera
+    </button>
+
+</div>
+
+<div
+    id="savedCameraContainer"
+>
+</div>
             <!-- CAMERA CARD -->
 
             <div class="camera-card">
