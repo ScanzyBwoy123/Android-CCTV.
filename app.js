@@ -1,9 +1,11 @@
-// ==========================================
-// ANDROID CCTV - WEBRTC CAMERA / VIEWER
-// ==========================================
-
 let localStream = null;
 let peerConnection = null;
+let signalingSocket = null;
+
+const SIGNALING_SERVER =
+    "wss://android-cctv-signaling.scanzybwoy8.workers.dev";
+
+const ROOM_ID = "android-cctv-demo";
 
 const configuration = {
     iceServers: [
@@ -12,11 +14,6 @@ const configuration = {
         }
     ]
 };
-
-
-// ==========================================
-// ELEMENTS
-// ==========================================
 
 const connectionStatus =
     document.getElementById("connectionStatus");
@@ -70,21 +67,15 @@ const copyAnswerButton =
     document.getElementById("copyAnswerButton");
 
 
-// ==========================================
-// STATUS
-// ==========================================
-
 function setStatus(message) {
-
     connectionStatus.textContent = message;
-
     console.log(message);
 }
 
 
-// ==========================================
-// MODE SWITCHING
-// ==========================================
+/* =========================================
+   CAMERA / VIEWER MODE
+========================================= */
 
 function showCameraMode() {
 
@@ -95,6 +86,8 @@ function showCameraMode() {
     viewerModeButton.classList.remove("active");
 
     setStatus("Camera mode");
+
+    connectToSignalingServer();
 }
 
 
@@ -107,6 +100,8 @@ function showViewerMode() {
     cameraModeButton.classList.remove("active");
 
     setStatus("Viewer mode");
+
+    connectToSignalingServer();
 }
 
 
@@ -121,114 +116,175 @@ viewerModeButton.addEventListener(
 );
 
 
-// ==========================================
-// START CAMERA
-// ==========================================
+/* =========================================
+   SIGNALING SERVER
+========================================= */
 
-startCameraButton.addEventListener(
-    "click",
-    async function () {
+function connectToSignalingServer() {
+
+    if (
+        signalingSocket &&
+        signalingSocket.readyState === WebSocket.OPEN
+    ) {
+        return;
+    }
+
+    if (
+        signalingSocket &&
+        signalingSocket.readyState === WebSocket.CONNECTING
+    ) {
+        return;
+    }
+
+    setStatus("Connecting to signaling server...");
+
+    signalingSocket = new WebSocket(
+        SIGNALING_SERVER +
+        "?room=" +
+        encodeURIComponent(ROOM_ID)
+    );
+
+
+    signalingSocket.onopen = function () {
+
+        console.log(
+            "Connected to signaling server"
+        );
+
+        setStatus(
+            "Connected to signaling server"
+        );
+    };
+
+
+    signalingSocket.onmessage = async function (event) {
 
         try {
 
-            setStatus("Requesting camera permission...");
+            const message =
+                JSON.parse(event.data);
 
-            localStream =
-                await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: {
-                            ideal: "environment"
-                        }
-                    },
-                    audio: true
-                });
+            console.log(
+                "Signaling message:",
+                message.type
+            );
 
-            localVideo.srcObject = localStream;
 
-            await localVideo.play();
+            if (message.type === "joined") {
 
-            createOfferButton.disabled = false;
+                setStatus(
+                    "Connected to CCTV signaling"
+                );
 
-            setStatus("Camera started successfully");
+                return;
+            }
+
+
+            if (message.type === "offer") {
+
+                await handleIncomingOffer(
+                    message
+                );
+
+                return;
+            }
+
+
+            if (message.type === "answer") {
+
+                await handleIncomingAnswer(
+                    message
+                );
+
+                return;
+            }
+
+
+            if (message.type === "candidate") {
+
+                await handleIncomingCandidate(
+                    message
+                );
+
+                return;
+            }
+
+
+            if (message.type === "peer-joined") {
+
+                console.log(
+                    "Another device joined"
+                );
+
+                return;
+            }
 
         } catch (error) {
 
-            console.error(error);
-
-            setStatus(
-                "Camera error: " + error.message
-            );
-
-            alert(
-                "Unable to access camera.\n\n" +
-                error.message
+            console.error(
+                "Signaling message error:",
+                error
             );
         }
-    }
-);
+    };
 
 
-// ==========================================
-// WAIT FOR ICE GATHERING
-// ==========================================
+    signalingSocket.onerror = function (error) {
 
-function waitForIceGatheringComplete(
-    connection
-) {
-
-    return new Promise(function (resolve) {
-
-        if (
-            connection.iceGatheringState ===
-            "complete"
-        ) {
-            resolve();
-            return;
-        }
-
-
-        function checkState() {
-
-            if (
-                connection.iceGatheringState ===
-                "complete"
-            ) {
-
-                connection.removeEventListener(
-                    "icegatheringstatechange",
-                    checkState
-                );
-
-                resolve();
-            }
-        }
-
-
-        connection.addEventListener(
-            "icegatheringstatechange",
-            checkState
+        console.error(
+            "Signaling error:",
+            error
         );
 
+        setStatus(
+            "Signaling server error"
+        );
+    };
 
-        // Safety timeout
-        setTimeout(function () {
 
-            connection.removeEventListener(
-                "icegatheringstatechange",
-                checkState
-            );
+    signalingSocket.onclose = function () {
 
-            resolve();
+        console.log(
+            "Signaling server disconnected"
+        );
 
-        }, 10000);
+        setStatus(
+            "Signaling server disconnected"
+        );
 
-    });
+        signalingSocket = null;
+    };
 }
 
 
-// ==========================================
-// CREATE PEER CONNECTION
-// ==========================================
+function sendSignalingMessage(message) {
+
+    if (
+        signalingSocket &&
+        signalingSocket.readyState === WebSocket.OPEN
+    ) {
+
+        signalingSocket.send(
+            JSON.stringify(message)
+        );
+
+        console.log(
+            "Sent signaling message:",
+            message.type
+        );
+
+    } else {
+
+        console.log(
+            "Signaling socket is not connected"
+        );
+    }
+}
+
+
+/* =========================================
+   PEER CONNECTION
+========================================= */
 
 function createPeerConnection(isViewer) {
 
@@ -238,7 +294,10 @@ function createPeerConnection(isViewer) {
         );
 
 
-    if (!isViewer && localStream) {
+    if (
+        !isViewer &&
+        localStream
+    ) {
 
         localStream
             .getTracks()
@@ -248,6 +307,7 @@ function createPeerConnection(isViewer) {
                     track,
                     localStream
                 );
+
             });
     }
 
@@ -267,14 +327,32 @@ function createPeerConnection(isViewer) {
                 remoteVideo.srcObject =
                     event.streams[0];
 
-                remoteVideo.play()
+                remoteVideo
+                    .play()
                     .catch(function (error) {
 
                         console.log(
-                            "Video playback waiting for user interaction",
+                            "Video playback waiting:",
                             error
                         );
+
                     });
+            }
+        };
+
+
+    peerConnection.onicecandidate =
+        function (event) {
+
+            if (event.candidate) {
+
+                sendSignalingMessage({
+
+                    type: "candidate",
+
+                    candidate:
+                        event.candidate
+                });
             }
         };
 
@@ -294,22 +372,76 @@ function createPeerConnection(isViewer) {
                 "Connection: " + state
             );
         };
-
-
-    peerConnection.onicegatheringstatechange =
-        function () {
-
-            console.log(
-                "ICE gathering:",
-                peerConnection.iceGatheringState
-            );
-        };
 }
 
 
-// ==========================================
-// CAMERA — CREATE CONNECTION CODE
-// ==========================================
+/* =========================================
+   START CAMERA
+========================================= */
+
+startCameraButton.addEventListener(
+    "click",
+    async function () {
+
+        try {
+
+            setStatus(
+                "Requesting camera permission..."
+            );
+
+
+            localStream =
+                await navigator.mediaDevices.getUserMedia({
+
+                    video: {
+                        facingMode: {
+                            ideal: "environment"
+                        }
+                    },
+
+                    audio: true
+                });
+
+
+            localVideo.srcObject =
+                localStream;
+
+
+            await localVideo.play();
+
+
+            createOfferButton.disabled =
+                false;
+
+
+            setStatus(
+                "Camera started successfully"
+            );
+
+
+            connectToSignalingServer();
+
+        } catch (error) {
+
+            console.error(error);
+
+            setStatus(
+                "Camera error: " +
+                error.message
+            );
+
+            alert(
+                "Unable to access camera.\n\n" +
+                error.message
+            );
+        }
+    }
+);
+
+
+/* =========================================
+   CAMERA CREATES OFFER
+========================================= */
 
 createOfferButton.addEventListener(
     "click",
@@ -334,7 +466,7 @@ createOfferButton.addEventListener(
 
 
             setStatus(
-                "Creating connection..."
+                "Creating camera connection..."
             );
 
 
@@ -350,38 +482,22 @@ createOfferButton.addEventListener(
             );
 
 
-            setStatus(
-                "Gathering connection information..."
-            );
+            sendSignalingMessage({
 
+                type: "offer",
 
-            await waitForIceGatheringComplete(
-                peerConnection
-            );
-
-
-            const connectionCode =
-                JSON.stringify(
+                offer:
                     peerConnection.localDescription
-                );
+            });
 
 
             offerOutput.value =
-                connectionCode;
-
-
-            copyOfferButton.disabled =
-                false;
-
-
-            connectCameraButton.disabled =
-                false;
+                "Automatic signaling enabled";
 
 
             setStatus(
-                "Connection code ready"
+                "Camera offer sent automatically"
             );
-
 
         } catch (error) {
 
@@ -401,33 +517,15 @@ createOfferButton.addEventListener(
 );
 
 
-// ==========================================
-// VIEWER — CREATE RESPONSE
-// ==========================================
+/* =========================================
+   VIEWER RECEIVES OFFER
+========================================= */
 
-createAnswerButton.addEventListener(
-    "click",
-    async function () {
+async function handleIncomingOffer(message) {
 
-        try {
+    try {
 
-            const offerText =
-                offerInput.value.trim();
-
-
-            if (!offerText) {
-
-                alert(
-                    "Paste the camera connection code first."
-                );
-
-                return;
-            }
-
-
-            const offer =
-                JSON.parse(offerText);
-
+        if (!viewerSection.classList.contains("hidden")) {
 
             if (peerConnection) {
 
@@ -436,7 +534,7 @@ createAnswerButton.addEventListener(
 
 
             setStatus(
-                "Connecting to camera..."
+                "Camera found. Connecting..."
             );
 
 
@@ -444,7 +542,7 @@ createAnswerButton.addEventListener(
 
 
             await peerConnection.setRemoteDescription(
-                offer
+                message.offer
             );
 
 
@@ -457,122 +555,133 @@ createAnswerButton.addEventListener(
             );
 
 
-            setStatus(
-                "Creating viewer response..."
-            );
+            sendSignalingMessage({
 
+                type: "answer",
 
-            await waitForIceGatheringComplete(
-                peerConnection
-            );
-
-
-            const response =
-                JSON.stringify(
+                answer:
                     peerConnection.localDescription
-                );
+            });
 
 
             answerOutput.value =
-                response;
-
-
-            copyAnswerButton.disabled =
-                false;
+                "Automatic signaling enabled";
 
 
             setStatus(
-                "Viewer response ready"
-            );
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            setStatus(
-                "Viewer error: " +
-                error.message
-            );
-
-            alert(
-                "Could not connect to camera.\n\n" +
-                error.message
+                "Viewer connected to camera"
             );
         }
+
+    } catch (error) {
+
+        console.error(
+            "Offer handling error:",
+            error
+        );
+
+        setStatus(
+            "Viewer connection error"
+        );
     }
-);
+}
 
 
-// ==========================================
-// CAMERA — RECEIVE VIEWER RESPONSE
-// ==========================================
+/* =========================================
+   CAMERA RECEIVES ANSWER
+========================================= */
+
+async function handleIncomingAnswer(message) {
+
+    try {
+
+        if (
+            peerConnection &&
+            peerConnection.signalingState ===
+            "have-local-offer"
+        ) {
+
+            await peerConnection.setRemoteDescription(
+                message.answer
+            );
+
+
+            setStatus(
+                "Camera connected to viewer"
+            );
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Answer handling error:",
+            error
+        );
+    }
+}
+
+
+/* =========================================
+   ICE CANDIDATE
+========================================= */
+
+async function handleIncomingCandidate(message) {
+
+    try {
+
+        if (
+            peerConnection &&
+            message.candidate
+        ) {
+
+            await peerConnection.addIceCandidate(
+                message.candidate
+            );
+        }
+
+    } catch (error) {
+
+        console.error(
+            "ICE candidate error:",
+            error
+        );
+    }
+}
+
+
+/* =========================================
+   OLD MANUAL BUTTONS
+   Kept disabled because signaling
+   is now automatic.
+========================================= */
 
 connectCameraButton.addEventListener(
     "click",
-    async function () {
+    function () {
 
-        try {
+        alert(
+            "Manual connection is no longer required. Signaling is automatic."
+        );
 
-            const answerText =
-                answerInput.value.trim();
-
-
-            if (!answerText) {
-
-                alert(
-                    "Paste the viewer response first."
-                );
-
-                return;
-            }
-
-
-            if (!peerConnection) {
-
-                alert(
-                    "Create the camera connection first."
-                );
-
-                return;
-            }
-
-
-            const answer =
-                JSON.parse(answerText);
-
-
-            await peerConnection.setRemoteDescription(
-                answer
-            );
-
-
-            setStatus(
-                "Connecting to viewer..."
-            );
-
-
-        } catch (error) {
-
-            console.error(error);
-
-            setStatus(
-                "Connection error: " +
-                error.message
-            );
-
-            alert(
-                "Could not connect viewer.\n\n" +
-                error.message
-            );
-        }
     }
 );
 
 
-// ==========================================
-// COPY CAMERA CODE
-// ==========================================
+createAnswerButton.addEventListener(
+    "click",
+    function () {
+
+        alert(
+            "Manual answer creation is no longer required. Signaling is automatic."
+        );
+
+    }
+);
+
+
+/* =========================================
+   COPY BUTTONS
+========================================= */
 
 copyOfferButton.addEventListener(
     "click",
@@ -585,26 +694,24 @@ copyOfferButton.addEventListener(
             );
 
             setStatus(
-                "Connection code copied"
+                "Information copied"
             );
 
         } catch (error) {
 
             offerOutput.select();
 
-            document.execCommand("copy");
+            document.execCommand(
+                "copy"
+            );
 
             setStatus(
-                "Connection code copied"
+                "Information copied"
             );
         }
     }
 );
 
-
-// ==========================================
-// COPY VIEWER RESPONSE
-// ==========================================
 
 copyAnswerButton.addEventListener(
     "click",
@@ -617,33 +724,40 @@ copyAnswerButton.addEventListener(
             );
 
             setStatus(
-                "Viewer response copied"
+                "Information copied"
             );
 
         } catch (error) {
 
             answerOutput.select();
 
-            document.execCommand("copy");
+            document.execCommand(
+                "copy"
+            );
 
             setStatus(
-                "Viewer response copied"
+                "Information copied"
             );
         }
     }
 );
 
 
-// ==========================================
-// INITIAL STATE
-// ==========================================
+/* =========================================
+   INITIAL STATE
+========================================= */
 
 cameraSection.classList.remove("hidden");
 viewerSection.classList.add("hidden");
 
 createOfferButton.disabled = true;
+
 copyOfferButton.disabled = true;
+
 connectCameraButton.disabled = true;
+
 copyAnswerButton.disabled = true;
 
 setStatus("Ready");
+
+connectToSignalingServer();
