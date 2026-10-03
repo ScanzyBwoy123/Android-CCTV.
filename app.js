@@ -1942,16 +1942,6 @@ createOfferButton.disabled =
 connectCameraButton.disabled =
     true;
 
-
-/* =========================================
-   CREATE CONTROLS
-========================================= */
-
-createCameraControls();
-
-createViewerControls();
-
-
 /* =========================================
    READY
 ========================================= */
