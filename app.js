@@ -1,157 +1,530 @@
-const cameraPreview =
-    document.getElementById("cameraPreview");
+// ==========================================
+// ANDROID CCTV - WEBRTC CAMERA / VIEWER
+// ==========================================
 
-const cameraPlaceholder =
-    document.getElementById("cameraPlaceholder");
+let localStream = null;
+let peerConnection = null;
 
-const startCameraButton =
-    document.getElementById("startCameraButton");
+const configuration = {
+    iceServers: [
+        {
+            urls: "stun:stun.l.google.com:19302"
+        }
+    ]
+};
 
-const stopCameraButton =
-    document.getElementById("stopCameraButton");
+// ------------------------------------------
+// ELEMENTS
+// ------------------------------------------
 
 const connectionStatus =
     document.getElementById("connectionStatus");
 
-const deviceStatus =
-    document.getElementById("deviceStatus");
+const cameraModeButton =
+    document.getElementById("cameraModeButton");
 
-const connectionType =
-    document.getElementById("connectionType");
+const viewerModeButton =
+    document.getElementById("viewerModeButton");
+
+const cameraSection =
+    document.getElementById("cameraSection");
+
+const viewerSection =
+    document.getElementById("viewerSection");
+
+const localVideo =
+    document.getElementById("localVideo");
+
+const remoteVideo =
+    document.getElementById("remoteVideo");
+
+const startCameraButton =
+    document.getElementById("startCameraButton");
+
+const createOfferButton =
+    document.getElementById("createOfferButton");
+
+const offerOutput =
+    document.getElementById("offerOutput");
+
+const copyOfferButton =
+    document.getElementById("copyOfferButton");
+
+const answerInput =
+    document.getElementById("answerInput");
+
+const connectCameraButton =
+    document.getElementById("connectCameraButton");
+
+const offerInput =
+    document.getElementById("offerInput");
+
+const createAnswerButton =
+    document.getElementById("createAnswerButton");
+
+const answerOutput =
+    document.getElementById("answerOutput");
+
+const copyAnswerButton =
+    document.getElementById("copyAnswerButton");
 
 
-let cameraStream = null;
+// ------------------------------------------
+// STATUS
+// ------------------------------------------
+
+function setStatus(message) {
+
+    if (connectionStatus) {
+        connectionStatus.textContent = message;
+    }
+
+    console.log(message);
+}
 
 
-// ==========================================
+// ------------------------------------------
+// MODE SWITCHING
+// ------------------------------------------
+
+function showCameraMode() {
+
+    cameraSection.style.display = "block";
+    viewerSection.style.display = "none";
+
+    cameraModeButton.classList.add("active");
+    viewerModeButton.classList.remove("active");
+
+    setStatus("Camera mode");
+}
+
+
+function showViewerMode() {
+
+    cameraSection.style.display = "none";
+    viewerSection.style.display = "block";
+
+    viewerModeButton.classList.add("active");
+    cameraModeButton.classList.remove("active");
+
+    setStatus("Viewer mode");
+}
+
+
+cameraModeButton.addEventListener(
+    "click",
+    showCameraMode
+);
+
+viewerModeButton.addEventListener(
+    "click",
+    showViewerMode
+);
+
+
+// ------------------------------------------
 // START CAMERA
-// ==========================================
-
-async function startCamera() {
-
-    try {
-
-        connectionStatus.textContent = "Starting...";
-        deviceStatus.textContent = "Starting camera...";
-
-        cameraStream =
-            await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: {
-                        ideal: "environment"
-                    }
-                },
-                audio: true
-            });
-
-
-        cameraPreview.srcObject = cameraStream;
-
-        cameraPreview.style.display = "block";
-
-        cameraPlaceholder.style.display = "none";
-
-
-        startCameraButton.disabled = true;
-
-        stopCameraButton.disabled = false;
-
-
-        connectionStatus.textContent = "Camera Active";
-
-        connectionStatus.style.color = "#4ade80";
-
-        deviceStatus.textContent = "Camera Online";
-
-        connectionType.textContent = "Local Camera";
-
-
-    } catch (error) {
-
-        console.error(
-            "Camera error:",
-            error
-        );
-
-
-        connectionStatus.textContent =
-            "Camera Error";
-
-        connectionStatus.style.color =
-            "#f87171";
-
-        deviceStatus.textContent =
-            "Camera unavailable";
-
-
-        alert(
-            "We could not access the camera. " +
-            "Please allow camera and microphone permission."
-        );
-
-    }
-
-}
-
-
-// ==========================================
-// STOP CAMERA
-// ==========================================
-
-function stopCamera() {
-
-    if (cameraStream) {
-
-        cameraStream
-            .getTracks()
-            .forEach(function(track) {
-
-                track.stop();
-
-            });
-
-        cameraStream = null;
-    }
-
-
-    cameraPreview.srcObject = null;
-
-    cameraPreview.style.display = "none";
-
-    cameraPlaceholder.style.display = "flex";
-
-
-    startCameraButton.disabled = false;
-
-    stopCameraButton.disabled = true;
-
-
-    connectionStatus.textContent =
-        "Offline";
-
-    connectionStatus.style.color =
-        "#f87171";
-
-    deviceStatus.textContent =
-        "Camera Offline";
-
-    connectionType.textContent =
-        "Not connected";
-
-}
-
-
-// ==========================================
-// BUTTON EVENTS
-// ==========================================
+// ------------------------------------------
 
 startCameraButton.addEventListener(
     "click",
-    startCamera
+    async function () {
+
+        try {
+
+            setStatus("Requesting camera permission...");
+
+            localStream =
+                await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: {
+                            ideal: "environment"
+                        }
+                    },
+                    audio: true
+                });
+
+            localVideo.srcObject =
+                localStream;
+
+            await localVideo.play();
+
+            setStatus(
+                "Camera started successfully"
+            );
+
+            createOfferButton.disabled = false;
+
+        } catch (error) {
+
+            console.error(error);
+
+            setStatus(
+                "Camera error: " +
+                error.message
+            );
+
+            alert(
+                "Unable to access the camera.\n\n" +
+                error.message
+            );
+        }
+    }
 );
 
 
-stopCameraButton.addEventListener(
+// ------------------------------------------
+// CREATE PEER CONNECTION
+// ------------------------------------------
+
+function createPeerConnection() {
+
+    peerConnection =
+        new RTCPeerConnection(
+            configuration
+        );
+
+
+    // Send camera tracks
+    if (localStream) {
+
+        localStream
+            .getTracks()
+            .forEach(function (track) {
+
+                peerConnection.addTrack(
+                    track,
+                    localStream
+                );
+
+            });
+
+    }
+
+
+    // ICE candidates
+    peerConnection.onicecandidate =
+        function (event) {
+
+            if (!event.candidate) {
+
+                if (
+                    peerConnection.localDescription
+                ) {
+
+                    offerOutput.value =
+                        JSON.stringify(
+                            peerConnection.localDescription
+                        );
+
+                    setStatus(
+                        "Offer ready"
+                    );
+                }
+            }
+        };
+
+
+    peerConnection.onconnectionstatechange =
+        function () {
+
+            console.log(
+                "Connection state:",
+                peerConnection.connectionState
+            );
+
+            setStatus(
+                "Connection: " +
+                peerConnection.connectionState
+            );
+        };
+}
+
+
+// ------------------------------------------
+// CAMERA: CREATE OFFER
+// ------------------------------------------
+
+createOfferButton.addEventListener(
     "click",
-    stopCamera
+    async function () {
+
+        try {
+
+            if (!localStream) {
+
+                alert(
+                    "Start the camera first."
+                );
+
+                return;
+            }
+
+
+            createPeerConnection();
+
+
+            const offer =
+                await peerConnection.createOffer();
+
+
+            await peerConnection.setLocalDescription(
+                offer
+            );
+
+
+            setStatus(
+                "Creating connection offer..."
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            setStatus(
+                "Offer error: " +
+                error.message
+            );
+        }
+    }
 );
+
+
+// ------------------------------------------
+// CAMERA: RECEIVE ANSWER
+// ------------------------------------------
+
+connectCameraButton.addEventListener(
+    "click",
+    async function () {
+
+        try {
+
+            if (!peerConnection) {
+
+                alert(
+                    "Create an offer first."
+                );
+
+                return;
+            }
+
+
+            const answerText =
+                answerInput.value.trim();
+
+
+            if (!answerText) {
+
+                alert(
+                    "Paste the viewer answer first."
+                );
+
+                return;
+            }
+
+
+            const answer =
+                JSON.parse(answerText);
+
+
+            await peerConnection.setRemoteDescription(
+                answer
+            );
+
+
+            setStatus(
+                "Connected to viewer"
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            setStatus(
+                "Answer error: " +
+                error.message
+            );
+
+            alert(
+                "Invalid answer.\n\n" +
+                error.message
+            );
+        }
+    }
+);
+
+
+// ------------------------------------------
+// VIEWER: CREATE ANSWER
+// ------------------------------------------
+
+createAnswerButton.addEventListener(
+    "click",
+    async function () {
+
+        try {
+
+            const offerText =
+                offerInput.value.trim();
+
+
+            if (!offerText) {
+
+                alert(
+                    "Paste the camera offer first."
+                );
+
+                return;
+            }
+
+
+            const offer =
+                JSON.parse(offerText);
+
+
+            createPeerConnection();
+
+
+            peerConnection.ontrack =
+                function (event) {
+
+                    console.log(
+                        "Remote video received"
+                    );
+
+                    if (
+                        event.streams &&
+                        event.streams[0]
+                    ) {
+
+                        remoteVideo.srcObject =
+                            event.streams[0];
+
+                        remoteVideo.play()
+                            .catch(function (error) {
+
+                                console.log(
+                                    "Autoplay blocked:",
+                                    error
+                                );
+
+                            });
+
+                    }
+                };
+
+
+            await peerConnection.setRemoteDescription(
+                offer
+            );
+
+
+            const answer =
+                await peerConnection.createAnswer();
+
+
+            await peerConnection.setLocalDescription(
+                answer
+            );
+
+
+            setStatus(
+                "Creating viewer answer..."
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            setStatus(
+                "Viewer error: " +
+                error.message
+            );
+
+            alert(
+                "Unable to create answer.\n\n" +
+                error.message
+            );
+        }
+    }
+);
+
+
+// ------------------------------------------
+// COPY OFFER
+// ------------------------------------------
+
+copyOfferButton.addEventListener(
+    "click",
+    async function () {
+
+        try {
+
+            await navigator.clipboard.writeText(
+                offerOutput.value
+            );
+
+            setStatus(
+                "Offer copied"
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Could not copy the offer."
+            );
+        }
+    }
+);
+
+
+// ------------------------------------------
+// COPY ANSWER
+// ------------------------------------------
+
+copyAnswerButton.addEventListener(
+    "click",
+    async function () {
+
+        try {
+
+            await navigator.clipboard.writeText(
+                answerOutput.value
+            );
+
+            setStatus(
+                "Answer copied"
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            alert(
+                "Could not copy the answer."
+            );
+        }
+    }
+);
+
+
+// ------------------------------------------
+// INITIAL STATE
+// ------------------------------------------
+
+if (cameraSection) {
+    cameraSection.style.display = "block";
+}
+
+if (viewerSection) {
+    viewerSection.style.display = "none";
+}
+
+if (createOfferButton) {
+    createOfferButton.disabled = true;
+}
+
+setStatus("Ready");
