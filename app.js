@@ -11,12 +11,14 @@ const SUPABASE_URL =
 const SUPABASE_PUBLISHABLE_KEY =
     "sb_publishable_awDxxCnxSAoB0o5-nhKh7A_9bZ_aYRo";
 
-const ROOM_ID = "android-cctv-demo";
+const ROOM_ID =
+    "android-cctv-demo";
 
 const configuration = {
     iceServers: [
         {
-            urls: "stun:stun.l.google.com:19302"
+            urls:
+                "stun:stun.l.google.com:19302"
         }
     ]
 };
@@ -38,55 +40,89 @@ const supabaseClient =
 ========================================= */
 
 const connectionStatus =
-    document.getElementById("connectionStatus");
+    document.getElementById(
+        "connectionStatus"
+    );
 
 const cameraModeButton =
-    document.getElementById("cameraModeButton");
+    document.getElementById(
+        "cameraModeButton"
+    );
 
 const viewerModeButton =
-    document.getElementById("viewerModeButton");
+    document.getElementById(
+        "viewerModeButton"
+    );
 
 const cameraSection =
-    document.getElementById("cameraMode");
+    document.getElementById(
+        "cameraMode"
+    );
 
 const viewerSection =
-    document.getElementById("viewerMode");
+    document.getElementById(
+        "viewerMode"
+    );
 
 const localVideo =
-    document.getElementById("localVideo");
+    document.getElementById(
+        "localVideo"
+    );
 
 const remoteVideo =
-    document.getElementById("remoteVideo");
+    document.getElementById(
+        "remoteVideo"
+    );
 
 const startCameraButton =
-    document.getElementById("startCameraButton");
+    document.getElementById(
+        "startCameraButton"
+    );
 
 const createOfferButton =
-    document.getElementById("createOfferButton");
+    document.getElementById(
+        "createOfferButton"
+    );
 
 const offerOutput =
-    document.getElementById("offerOutput");
+    document.getElementById(
+        "offerOutput"
+    );
 
 const copyOfferButton =
-    document.getElementById("copyOfferButton");
+    document.getElementById(
+        "copyOfferButton"
+    );
 
 const answerInput =
-    document.getElementById("answerInput");
+    document.getElementById(
+        "answerInput"
+    );
 
 const connectCameraButton =
-    document.getElementById("connectCameraButton");
+    document.getElementById(
+        "connectCameraButton"
+    );
 
 const offerInput =
-    document.getElementById("offerInput");
+    document.getElementById(
+        "offerInput"
+    );
 
 const createAnswerButton =
-    document.getElementById("createAnswerButton");
+    document.getElementById(
+        "createAnswerButton"
+    );
 
 const answerOutput =
-    document.getElementById("answerOutput");
+    document.getElementById(
+        "answerOutput"
+    );
 
 const copyAnswerButton =
-    document.getElementById("copyAnswerButton");
+    document.getElementById(
+        "copyAnswerButton"
+    );
 
 
 /* =========================================
@@ -103,10 +139,9 @@ function setStatus(message) {
 
 
 /* =========================================
-   CREATE CONTROL BUTTONS
-   These are created automatically so
-   index.html does not need to change yet.
+   CAMERA CONTROLS
 ========================================= */
+
 function createCameraControls() {
 
     if (
@@ -118,7 +153,9 @@ function createCameraControls() {
     }
 
     const panel =
-        document.createElement("div");
+        document.createElement(
+            "div"
+        );
 
     panel.id =
         "cameraControlPanel";
@@ -179,7 +216,8 @@ function createCameraControls() {
     );
 
 
-    // START CAMERA
+    /* START */
+
     document
         .getElementById(
             "remoteStartCameraButton"
@@ -194,7 +232,8 @@ function createCameraControls() {
         );
 
 
-    // STOP CAMERA
+    /* STOP */
+
     document
         .getElementById(
             "remoteStopCameraButton"
@@ -209,7 +248,8 @@ function createCameraControls() {
         );
 
 
-    // FRONT CAMERA
+    /* FRONT */
+
     document
         .getElementById(
             "switchFrontCameraButton"
@@ -226,7 +266,8 @@ function createCameraControls() {
         );
 
 
-    // REAR CAMERA
+    /* REAR */
+
     document
         .getElementById(
             "switchRearCameraButton"
@@ -243,7 +284,8 @@ function createCameraControls() {
         );
 
 
-    // MUTE / UNMUTE MICROPHONE
+    /* MICROPHONE */
+
     document
         .getElementById(
             "toggleCameraAudioButton"
@@ -268,8 +310,9 @@ function createCameraControls() {
         );
 }
 
+
 /* =========================================
-   VIEWER CONTROL PANEL
+   VIEWER CONTROLS
 ========================================= */
 
 function createViewerControls() {
@@ -282,30 +325,25 @@ function createViewerControls() {
         return;
     }
 
-
     const panel =
-        document.createElement("div");
-
+        document.createElement(
+            "div"
+        );
 
     panel.id =
         "viewerControlPanel";
 
-
     panel.style.marginTop =
         "15px";
-
 
     panel.style.display =
         "flex";
 
-
     panel.style.flexWrap =
         "wrap";
 
-
     panel.style.gap =
         "8px";
-
 
     panel.innerHTML = `
 
@@ -346,11 +384,12 @@ function createViewerControls() {
 
     `;
 
-
     viewerSection.appendChild(
         panel
     );
 
+
+    /* REMOTE START */
 
     document
         .getElementById(
@@ -368,6 +407,8 @@ function createViewerControls() {
         );
 
 
+    /* REMOTE STOP */
+
     document
         .getElementById(
             "viewerStopCameraButton"
@@ -383,6 +424,8 @@ function createViewerControls() {
             }
         );
 
+
+    /* REMOTE FRONT */
 
     document
         .getElementById(
@@ -404,6 +447,8 @@ function createViewerControls() {
         );
 
 
+    /* REMOTE REAR */
+
     document
         .getElementById(
             "viewerRearCameraButton"
@@ -424,36 +469,39 @@ function createViewerControls() {
         );
 
 
+    /* REMOTE MICROPHONE */
+
     document
-    .getElementById(
-        "viewerMuteButton"
-    )
-    .addEventListener(
-        "click",
-        function () {
+        .getElementById(
+            "viewerMuteButton"
+        )
+        .addEventListener(
+            "click",
+            function () {
 
-            cameraAudioEnabled =
-                !cameraAudioEnabled;
+                cameraAudioEnabled =
+                    !cameraAudioEnabled;
 
-            sendCameraCommand(
-                "audio-control",
-                {
-                    enabled:
-                        cameraAudioEnabled
-                }
-            );
+                sendCameraCommand(
+                    "audio-control",
+                    {
+                        enabled:
+                            cameraAudioEnabled
+                    }
+                );
 
-            this.textContent =
-                cameraAudioEnabled
-                    ? "🔇 Mute"
-                    : "🔊 Unmute";
+                this.textContent =
+                    cameraAudioEnabled
+                        ? "🔇 Mute"
+                        : "🔊 Unmute";
 
-        }
-    );
+            }
+        );
 }
 
+
 /* =========================================
-   CAMERA MODE
+   CAMERA / VIEWER MODES
 ========================================= */
 
 function showCameraMode() {
@@ -513,7 +561,6 @@ cameraModeButton.addEventListener(
     showCameraMode
 );
 
-
 viewerModeButton.addEventListener(
     "click",
     showViewerMode
@@ -527,15 +574,12 @@ viewerModeButton.addEventListener(
 async function connectToSignalingServer() {
 
     if (signalingChannel) {
-
         return;
     }
-
 
     setStatus(
         "Connecting to Supabase..."
     );
-
 
     signalingChannel =
         supabaseClient.channel(
@@ -562,16 +606,11 @@ async function connectToSignalingServer() {
                 const data =
                     message.payload;
 
-
                 console.log(
                     "Signal received:",
                     data.type
                 );
 
-
-                /* =================================
-                   VIEWER REQUESTS CAMERA
-                ================================= */
 
                 if (
                     data.type ===
@@ -583,10 +622,6 @@ async function connectToSignalingServer() {
                     return;
                 }
 
-
-                /* =================================
-                   CAMERA REMOTE COMMANDS
-                ================================= */
 
                 if (
                     data.type ===
@@ -601,10 +636,6 @@ async function connectToSignalingServer() {
                 }
 
 
-                /* =================================
-                   VIEWER RECEIVES OFFER
-                ================================= */
-
                 if (
                     data.type ===
                     "offer"
@@ -618,10 +649,6 @@ async function connectToSignalingServer() {
                 }
 
 
-                /* =================================
-                   CAMERA RECEIVES ANSWER
-                ================================= */
-
                 if (
                     data.type ===
                     "answer"
@@ -634,10 +661,6 @@ async function connectToSignalingServer() {
                     return;
                 }
 
-
-                /* =================================
-                   ICE
-                ================================= */
 
                 if (
                     data.type ===
@@ -663,7 +686,10 @@ async function connectToSignalingServer() {
 
 
     signalingChannel.subscribe(
-        function (status, error) {
+        function (
+            status,
+            error
+        ) {
 
             console.log(
                 "Supabase channel status:",
@@ -745,7 +771,6 @@ async function sendSignalingMessage(
         await connectToSignalingServer();
     }
 
-
     if (!signalingChannel) {
 
         setStatus(
@@ -754,7 +779,6 @@ async function sendSignalingMessage(
 
         return;
     }
-
 
     try {
 
@@ -770,7 +794,6 @@ async function sendSignalingMessage(
                 message
 
         });
-
 
         console.log(
             "Signal sent:",
@@ -811,7 +834,6 @@ async function sendCameraCommand(
 
         });
 
-
         setStatus(
             "Camera command sent: " +
             command
@@ -840,8 +862,8 @@ async function handleCameraCommand(
 ) {
 
     /*
-       Camera only.
-       Viewer ignores camera commands.
+       Only the camera device responds
+       to remote camera commands.
     */
 
     if (
@@ -893,7 +915,6 @@ async function handleCameraCommand(
                 ? data.options.facingMode
                 : "environment";
 
-
         await switchCamera(
             facingMode
         );
@@ -914,6 +935,8 @@ async function handleCameraCommand(
                 ? data.options.enabled
                 : true;
 
+        cameraAudioEnabled =
+            enabled;
 
         setCameraAudio(
             enabled
@@ -954,7 +977,9 @@ async function startCamera() {
                 .getTracks()
                 .forEach(
                     function (track) {
+
                         track.stop();
+
                     }
                 );
         }
@@ -976,6 +1001,18 @@ async function startCamera() {
                 });
 
 
+        localStream
+            .getAudioTracks()
+            .forEach(
+                function (track) {
+
+                    track.enabled =
+                        cameraAudioEnabled;
+
+                }
+            );
+
+
         localVideo.srcObject =
             localStream;
 
@@ -992,7 +1029,7 @@ async function startCamera() {
         );
 
 
-        connectToSignalingServer();
+        await connectToSignalingServer();
 
     } catch (error) {
 
@@ -1028,20 +1065,6 @@ startCameraButton.addEventListener(
 
 async function startCameraFromCommand() {
 
-    /*
-       IMPORTANT:
-       Browsers normally require a user gesture
-       before camera permission can be granted.
-
-       Therefore this works automatically if
-       permission was already granted and the
-       browser allows it.
-
-       Otherwise Android will need the native
-       app version for completely automatic
-       startup.
-    */
-
     if (localStream) {
 
         setStatus(
@@ -1053,7 +1076,7 @@ async function startCameraFromCommand() {
 
 
     setStatus(
-        "Remote request received — starting camera..."
+        "Remote request received..."
     );
 
 
@@ -1062,16 +1085,10 @@ async function startCameraFromCommand() {
         await startCamera();
 
 
-        /*
-           If there is already a viewer waiting,
-           create the connection automatically.
-        */
-
-        if (
-            localStream
-        ) {
+        if (localStream) {
 
             await createCameraOffer();
+
         }
 
     } catch (error) {
@@ -1128,6 +1145,8 @@ function stopCamera() {
         "Camera stopped"
     );
 }
+
+
 /* =========================================
    SWITCH CAMERA
 ========================================= */
@@ -1161,21 +1180,14 @@ async function switchCamera(
         );
 
 
-        /*
-           Get the currently active video track.
-        */
-
         const oldVideoTrack =
-            localStream.getVideoTracks()[0];
+            localStream
+                .getVideoTracks()[0];
 
-
-        /*
-           First try to identify the actual
-           camera devices available.
-        */
 
         const devices =
-            await navigator.mediaDevices.enumerateDevices();
+            await navigator.mediaDevices
+                .enumerateDevices();
 
 
         const videoDevices =
@@ -1191,19 +1203,8 @@ async function switchCamera(
             );
 
 
-        console.log(
-            "Available cameras:",
-            videoDevices
-        );
-
-
-        /*
-           If the browser already knows the
-           camera labels, select the opposite
-           physical camera where possible.
-        */
-
-        let selectedDevice = null;
+        let selectedDevice =
+            null;
 
 
         if (
@@ -1272,11 +1273,6 @@ async function switchCamera(
                 }
 
 
-                /*
-                   If labels don't identify the
-                   camera, use another camera.
-                */
-
                 if (
                     !selectedDevice
                 ) {
@@ -1285,14 +1281,9 @@ async function switchCamera(
                         otherDevices[0];
 
                 }
-
             }
         }
 
-
-        /*
-           Request the selected physical camera.
-        */
 
         let newStream;
 
@@ -1300,12 +1291,6 @@ async function switchCamera(
         if (
             selectedDevice
         ) {
-
-            console.log(
-                "Using camera device:",
-                selectedDevice.label
-            );
-
 
             newStream =
                 await navigator.mediaDevices
@@ -1324,11 +1309,6 @@ async function switchCamera(
 
         } else {
 
-            /*
-               Fallback for browsers that do not
-               expose camera devices properly.
-            */
-
             newStream =
                 await navigator.mediaDevices
                     .getUserMedia({
@@ -1343,7 +1323,6 @@ async function switchCamera(
                         audio: false
 
                     });
-
         }
 
 
@@ -1358,16 +1337,6 @@ async function switchCamera(
             );
         }
 
-
-        console.log(
-            "New camera settings:",
-            newVideoTrack.getSettings()
-        );
-
-
-        /*
-           Replace the video track in WebRTC.
-        */
 
         if (
             peerConnection
@@ -1394,15 +1363,9 @@ async function switchCamera(
                 await sender.replaceTrack(
                     newVideoTrack
                 );
-
             }
-
         }
 
-
-        /*
-           Stop the old physical camera.
-        */
 
         if (
             oldVideoTrack
@@ -1413,22 +1376,13 @@ async function switchCamera(
             localStream.removeTrack(
                 oldVideoTrack
             );
-
         }
 
-
-        /*
-           Add the new camera track.
-        */
 
         localStream.addTrack(
             newVideoTrack
         );
 
-
-        /*
-           Update local preview.
-        */
 
         localVideo.srcObject =
             localStream;
@@ -1446,13 +1400,6 @@ async function switchCamera(
                 ? "✅ Front camera active"
                 : "✅ Rear camera active"
         );
-
-
-        console.log(
-            "Camera successfully switched to:",
-            cameraName
-        );
-
 
     } catch (error) {
 
@@ -1474,6 +1421,7 @@ async function switchCamera(
     }
 }
 
+
 /* =========================================
    CAMERA AUDIO
 ========================================= */
@@ -1482,7 +1430,17 @@ function setCameraAudio(
     enabled
 ) {
 
+    cameraAudioEnabled =
+        enabled;
+
+
     if (!localStream) {
+
+        setStatus(
+            enabled
+                ? "Camera microphone enabled"
+                : "Camera microphone muted"
+        );
 
         return;
     }
@@ -1631,6 +1589,7 @@ async function createCameraOffer() {
     if (peerConnection) {
 
         peerConnection.close();
+
     }
 
 
@@ -1645,12 +1604,14 @@ async function createCameraOffer() {
 
 
     const offer =
-        await peerConnection.createOffer();
+        await peerConnection
+            .createOffer();
 
 
-    await peerConnection.setLocalDescription(
-        offer
-    );
+    await peerConnection
+        .setLocalDescription(
+            offer
+        );
 
 
     await sendSignalingMessage({
@@ -1659,7 +1620,8 @@ async function createCameraOffer() {
             "offer",
 
         offer:
-            peerConnection.localDescription
+            peerConnection
+                .localDescription
 
     });
 
@@ -1693,6 +1655,7 @@ createOfferButton.addEventListener(
 
 
         await createCameraOffer();
+
     }
 );
 
@@ -1710,10 +1673,6 @@ function createPeerConnection(
             configuration
         );
 
-
-    /*
-       CAMERA SENDS CAMERA/MICROPHONE
-    */
 
     if (
         !isViewer &&
@@ -1734,10 +1693,6 @@ function createPeerConnection(
             );
     }
 
-
-    /*
-       VIEWER RECEIVES CAMERA
-    */
 
     peerConnection.ontrack =
         function (event) {
@@ -1772,10 +1727,6 @@ function createPeerConnection(
         };
 
 
-    /*
-       ICE
-    */
-
     peerConnection.onicecandidate =
         function (event) {
 
@@ -1796,15 +1747,12 @@ function createPeerConnection(
         };
 
 
-    /*
-       REAL WEBRTC STATUS
-    */
-
     peerConnection.onconnectionstatechange =
         function () {
 
             const state =
-                peerConnection.connectionState;
+                peerConnection
+                    .connectionState;
 
 
             console.log(
@@ -1822,10 +1770,7 @@ function createPeerConnection(
                     "📹 Live camera connected"
                 );
 
-            }
-
-
-            else if (
+            } else if (
                 state ===
                 "connecting"
             ) {
@@ -1834,10 +1779,7 @@ function createPeerConnection(
                     "Connecting video..."
                 );
 
-            }
-
-
-            else if (
+            } else if (
                 state ===
                 "disconnected"
             ) {
@@ -1846,10 +1788,7 @@ function createPeerConnection(
                     "Video connection interrupted"
                 );
 
-            }
-
-
-            else if (
+            } else if (
                 state ===
                 "failed"
             ) {
@@ -1858,10 +1797,7 @@ function createPeerConnection(
                     "Video connection failed"
                 );
 
-            }
-
-
-            else if (
+            } else if (
                 state ===
                 "closed"
             ) {
@@ -1869,7 +1805,6 @@ function createPeerConnection(
                 setStatus(
                     "Video connection closed"
                 );
-
             }
         };
 }
@@ -1898,6 +1833,7 @@ async function handleIncomingOffer(
         if (peerConnection) {
 
             peerConnection.close();
+
         }
 
 
@@ -1911,18 +1847,21 @@ async function handleIncomingOffer(
         );
 
 
-        await peerConnection.setRemoteDescription(
-            message.offer
-        );
+        await peerConnection
+            .setRemoteDescription(
+                message.offer
+            );
 
 
         const answer =
-            await peerConnection.createAnswer();
+            await peerConnection
+                .createAnswer();
 
 
-        await peerConnection.setLocalDescription(
-            answer
-        );
+        await peerConnection
+            .setLocalDescription(
+                answer
+            );
 
 
         await sendSignalingMessage({
@@ -1931,7 +1870,8 @@ async function handleIncomingOffer(
                 "answer",
 
             answer:
-                peerConnection.localDescription
+                peerConnection
+                    .localDescription
 
         });
 
@@ -1975,9 +1915,10 @@ async function handleIncomingAnswer(
             "have-local-offer"
         ) {
 
-            await peerConnection.setRemoteDescription(
-                message.answer
-            );
+            await peerConnection
+                .setRemoteDescription(
+                    message.answer
+                );
 
 
             setStatus(
@@ -2010,9 +1951,10 @@ async function handleIncomingCandidate(
             message.candidate
         ) {
 
-            await peerConnection.addIceCandidate(
-                message.candidate
-            );
+            await peerConnection
+                .addIceCandidate(
+                    message.candidate
+                );
         }
 
     } catch (error) {
