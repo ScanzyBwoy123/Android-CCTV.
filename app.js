@@ -2103,7 +2103,21 @@ async function handleIncomingOffer(
             true
         );
 
+const selectedCameraId =
+    getSavedCameraId();
 
+if (
+    message.targetCameraId &&
+    message.targetCameraId !== selectedCameraId
+) {
+
+    console.log(
+        "Ignoring offer for another camera:",
+        message.targetCameraId
+    );
+
+    return;
+}
         await peerConnection.setRemoteDescription(
             message.offer
         );
