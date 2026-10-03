@@ -1165,8 +1165,351 @@ function stopCamera() {
         "Camera stopped"
     );
 }
+/* =========================================
+   SWITCH CAMERA
+========================================= */
+
+async function switchCamera(
+    facingMode
+) {
+
+    if (!localStream) {
+
+        setStatus(
+            "Camera is not running"
+        );
+
+        return;
+    }
 
 
+    try {
+
+        const cameraName =
+            facingMode === "user"
+                ? "front"
+                : "rear";
+
+
+        setStatus(
+            "Opening " +
+            cameraName +
+            " camera..."
+        );
+
+
+        /*
+           Get the currently active video track.
+        */
+
+        const oldVideoTrack =
+            localStream.getVideoTracks()[0];
+
+
+        /*
+           First try to identify the actual
+           camera devices available.
+        */
+
+        const devices =
+            await navigator.mediaDevices.enumerateDevices();
+
+
+        const videoDevices =
+            devices.filter(
+                function (device) {
+
+                    return (
+                        device.kind ===
+                        "videoinput"
+                    );
+
+                }
+            );
+
+
+        console.log(
+            "Available cameras:",
+            videoDevices
+        );
+
+
+        /*
+           If the browser already knows the
+           camera labels, select the opposite
+           physical camera where possible.
+        */
+
+        let selectedDevice = null;
+
+
+        if (
+            videoDevices.length > 1
+        ) {
+
+            const currentDeviceId =
+                oldVideoTrack &&
+                oldVideoTrack.getSettings
+                    ? oldVideoTrack
+                        .getSettings()
+                        .deviceId
+                    : null;
+
+
+            const otherDevices =
+                videoDevices.filter(
+                    function (device) {
+
+                        return (
+                            device.deviceId !==
+                            currentDeviceId
+                        );
+
+                    }
+                );
+
+
+            if (
+                otherDevices.length > 0
+            ) {
+
+                if (
+                    facingMode ===
+                    "user"
+                ) {
+
+                    selectedDevice =
+                        otherDevices.find(
+                            function (device) {
+
+                                return (
+                                    /front|user/i.test(
+                                        device.label
+                                    )
+                                );
+
+                            }
+                        );
+
+                } else {
+
+                    selectedDevice =
+                        otherDevices.find(
+                            function (device) {
+
+                                return (
+                                    /back|rear|environment/i.test(
+                                        device.label
+                                    )
+                                );
+
+                            }
+                        );
+
+                }
+
+
+                /*
+                   If labels don't identify the
+                   camera, use another camera.
+                */
+
+                if (
+                    !selectedDevice
+                ) {
+
+                    selectedDevice =
+                        otherDevices[0];
+
+                }
+
+            }
+        }
+
+
+        /*
+           Request the selected physical camera.
+        */
+
+        let newStream;
+
+
+        if (
+            selectedDevice
+        ) {
+
+            console.log(
+                "Using camera device:",
+                selectedDevice.label
+            );
+
+
+            newStream =
+                await navigator.mediaDevices
+                    .getUserMedia({
+
+                        video: {
+                            deviceId: {
+                                exact:
+                                    selectedDevice.deviceId
+                            }
+                        },
+
+                        audio: false
+
+                    });
+
+        } else {
+
+            /*
+               Fallback for browsers that do not
+               expose camera devices properly.
+            */
+
+            newStream =
+                await navigator.mediaDevices
+                    .getUserMedia({
+
+                        video: {
+                            facingMode: {
+                                exact:
+                                    facingMode
+                            }
+                        },
+
+                        audio: false
+
+                    });
+
+        }
+
+
+        const newVideoTrack =
+            newStream.getVideoTracks()[0];
+
+
+        if (!newVideoTrack) {
+
+            throw new Error(
+                "No video camera was returned"
+            );
+        }
+
+
+        console.log(
+            "New camera settings:",
+            newVideoTrack.getSettings()
+        );
+
+
+        /*
+           Replace the video track in WebRTC.
+        */
+
+        if (
+            peerConnection
+        ) {
+
+            const sender =
+                peerConnection
+                    .getSenders()
+                    .find(
+                        function (item) {
+
+                            return (
+                                item.track &&
+                                item.track.kind ===
+                                "video"
+                            );
+
+                        }
+                    );
+
+
+            if (sender) {
+
+                await sender.replaceTrack(
+                    newVideoTrack
+                );
+
+            }
+
+        }
+
+
+        /*
+           Stop the old physical camera.
+        */
+
+        if (
+            oldVideoTrack
+        ) {
+
+            oldVideoTrack.stop();
+
+            localStream.removeTrack(
+                oldVideoTrack
+            );
+
+        }
+
+
+        /*
+           Add the new camera track.
+        */
+
+        localStream.addTrack(
+            newVideoTrack
+        );
+
+
+        /*
+           Update local preview.
+        */
+
+        localVideo.srcObject =
+            localStream;
+
+
+        await localVideo.play();
+
+
+        currentCameraFacing =
+            facingMode;
+
+
+        setStatus(
+            cameraName === "front"
+                ? "✅ Front camera active"
+                : "✅ Rear camera active"
+        );
+
+
+        console.log(
+            "Camera successfully switched to:",
+            cameraName
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Camera switch error:",
+            error
+        );
+
+
+        setStatus(
+            "❌ Unable to switch camera"
+        );
+
+
+        alert(
+            "Unable to switch camera.\n\n" +
+            error.message
+        );
+    }
+}
 /* =========================================
    SWITCH CAMERA
 ========================================= */
