@@ -14,100 +14,148 @@
 
 <body>
 
-    <div class="app">
+<div class="app">
 
-        <header class="top-bar">
-            <h1>Android CCTV</h1>
-            <span id="connectionStatus">
-                Offline
-            </span>
-        </header>
+    <header class="top-bar">
+        <h1>Android CCTV</h1>
+        <span id="connectionStatus">Offline</span>
+    </header>
 
-        <main>
+    <main>
 
-            <section class="welcome-card">
+        <section class="mode-selector">
 
-                <h2>Your Security Camera</h2>
+            <button id="cameraModeButton">
+                📷 Camera
+            </button>
 
-                <p>
-                    Use an Android phone as a camera
-                    and watch it remotely from your iPhone.
-                </p>
+            <button id="viewerModeButton">
+                👁️ Viewer
+            </button>
 
-            </section>
-
-
-            <section class="camera-card">
-
-                <video
-                    id="cameraPreview"
-                    autoplay
-                    playsinline
-                    muted
-                ></video>
-
-                <div class="camera-placeholder" id="cameraPlaceholder">
-
-                    <div class="camera-icon">
-                        📷
-                    </div>
-
-                    <h3>Camera is off</h3>
-
-                    <p>
-                        Start the camera to begin.
-                    </p>
-
-                </div>
-
-            </section>
+        </section>
 
 
-            <section class="controls">
+        <!-- CAMERA MODE -->
 
-                <button
-                    id="startCameraButton"
-                    class="primary-button"
-                >
-                    📷 Start Camera
-                </button>
+        <section id="cameraMode" class="mode">
 
-                <button
-                    id="stopCameraButton"
-                    class="secondary-button"
-                    disabled
-                >
-                    ⛔ Stop Camera
-                </button>
+            <h2>Camera Device</h2>
 
-            </section>
+            <p>
+                This device will provide the live camera feed.
+            </p>
+
+            <video
+                id="localVideo"
+                autoplay
+                playsinline
+                muted
+            ></video>
+
+            <button
+                id="startCameraButton"
+                class="primary-button"
+            >
+                📷 Start Camera
+            </button>
+
+            <button
+                id="createOfferButton"
+                class="primary-button"
+                disabled
+            >
+                Create Connection
+            </button>
+
+            <h3>Connection Code</h3>
+
+            <textarea
+                id="offerOutput"
+                readonly
+                placeholder="Connection information will appear here..."
+            ></textarea>
+
+            <button
+                id="copyOfferButton"
+                disabled
+            >
+                Copy Connection Code
+            </button>
+
+            <h3>Viewer Response</h3>
+
+            <textarea
+                id="answerInput"
+                placeholder="Paste the viewer response here..."
+            ></textarea>
+
+            <button
+                id="connectCameraButton"
+                disabled
+            >
+                Connect Viewer
+            </button>
+
+        </section>
 
 
-            <section class="device-card">
+        <!-- VIEWER MODE -->
 
-                <h3>Device</h3>
+        <section
+            id="viewerMode"
+            class="mode hidden"
+        >
 
-                <div class="device-row">
-                    <span>Status</span>
-                    <strong id="deviceStatus">
-                        Camera Offline
-                    </strong>
-                </div>
+            <h2>Viewer</h2>
 
-                <div class="device-row">
-                    <span>Connection</span>
-                    <strong id="connectionType">
-                        Not connected
-                    </strong>
-                </div>
+            <p>
+                Watch the remote Android camera here.
+            </p>
 
-            </section>
+            <video
+                id="remoteVideo"
+                autoplay
+                playsinline
+                controls
+            ></video>
 
-        </main>
+            <h3>Camera Connection Code</h3>
 
-    </div>
+            <textarea
+                id="offerInput"
+                placeholder="Paste the camera connection code here..."
+            ></textarea>
 
-    <script src="app.js"></script>
+            <button
+                id="createAnswerButton"
+                class="primary-button"
+            >
+                Connect to Camera
+            </button>
+
+            <h3>Viewer Response</h3>
+
+            <textarea
+                id="answerOutput"
+                readonly
+                placeholder="Viewer response will appear here..."
+            ></textarea>
+
+            <button
+                id="copyAnswerButton"
+                disabled
+            >
+                Copy Viewer Response
+            </button>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="app.js"></script>
 
 </body>
 </html>
