@@ -13,6 +13,46 @@ const SUPABASE_PUBLISHABLE_KEY =
 
 const ROOM_ID =
     "android-cctv-demo";
+/* =========================================
+   DEVICE ID
+========================================= */
+
+function getCameraId() {
+
+    let cameraId =
+        localStorage.getItem(
+            "androidCctvCameraId"
+        );
+
+
+    if (!cameraId) {
+
+        const randomPart =
+            Math.random()
+                .toString(36)
+                .substring(2, 8)
+                .toUpperCase();
+
+
+        cameraId =
+            "CAM-" +
+            randomPart;
+
+
+        localStorage.setItem(
+            "androidCctvCameraId",
+            cameraId
+        );
+
+    }
+
+
+    return cameraId;
+}
+
+
+const CAMERA_ID =
+    getCameraId();
 let cameraHeartbeatTimer = null;
 
 let lastCameraHeartbeat = 0;
