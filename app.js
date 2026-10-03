@@ -57,6 +57,192 @@ const cameraIdDisplay =
     document.getElementById(
         "cameraIdDisplay"
     );
+/* =========================================
+   SAVED CAMERA PAIRING
+========================================= */
+
+const cameraIdInput =
+    document.getElementById(
+        "cameraIdInput"
+    );
+
+const addCameraButton =
+    document.getElementById(
+        "addCameraButton"
+    );
+
+const savedCameraContainer =
+    document.getElementById(
+        "savedCameraContainer"
+    );
+
+
+function getSavedCameraId() {
+
+    return localStorage.getItem(
+        "pairedCameraId"
+    );
+
+}
+
+
+function saveCameraId(
+    cameraId
+) {
+
+    localStorage.setItem(
+        "pairedCameraId",
+        cameraId
+    );
+
+}
+
+
+function displaySavedCamera() {
+
+    if (
+        !savedCameraContainer
+    ) {
+
+        return;
+    }
+
+
+    const savedCameraId =
+        getSavedCameraId();
+
+
+    if (!savedCameraId) {
+
+        savedCameraContainer.innerHTML =
+            "";
+
+        return;
+    }
+
+
+    savedCameraContainer.innerHTML = `
+
+        <div class="camera-card">
+
+            <div class="camera-card-icon">
+                📷
+            </div>
+
+            <div class="camera-card-info">
+
+                <h3>
+                    Android Camera
+                </h3>
+
+                <p>
+                    Camera ID:
+                    ${savedCameraId}
+                </p>
+
+                <p
+                    id="savedCameraStatus"
+                >
+                    🔴 Offline
+                </p>
+
+            </div>
+
+            <button
+                type="button"
+                id="savedCameraConnectButton"
+                class="connect-button"
+            >
+                Connect
+            </button>
+
+        </div>
+
+    `;
+
+
+    const connectButton =
+        document.getElementById(
+            "savedCameraConnectButton"
+        );
+
+
+    if (connectButton) {
+
+        connectButton.addEventListener(
+            "click",
+            async function () {
+
+                createAnswerButton.click();
+
+            }
+        );
+
+    }
+
+}
+
+
+if (addCameraButton) {
+
+    addCameraButton.addEventListener(
+        "click",
+        function () {
+
+            const enteredId =
+                cameraIdInput.value
+                    .trim()
+                    .toUpperCase();
+
+
+            if (!enteredId) {
+
+                alert(
+                    "Please enter a Camera ID."
+                );
+
+                return;
+            }
+
+
+            if (
+                !enteredId.startsWith(
+                    "CAM-"
+                )
+            ) {
+
+                alert(
+                    "Invalid Camera ID.\n\n" +
+                    "A Camera ID should start with CAM-."
+                );
+
+                return;
+            }
+
+
+            saveCameraId(
+                enteredId
+            );
+
+
+            cameraIdInput.value =
+                "";
+
+
+            displaySavedCamera();
+
+
+            setViewerStatus(
+                "Camera added successfully."
+            );
+
+        }
+    );
+
+}
+
+
+displaySavedCamera();
 
 if (cameraIdDisplay) {
 
