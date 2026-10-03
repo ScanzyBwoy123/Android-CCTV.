@@ -107,7 +107,6 @@ function setStatus(message) {
    These are created automatically so
    index.html does not need to change yet.
 ========================================= */
-
 function createCameraControls() {
 
     if (
@@ -118,29 +117,23 @@ function createCameraControls() {
         return;
     }
 
-
     const panel =
         document.createElement("div");
 
     panel.id =
         "cameraControlPanel";
 
-
     panel.style.marginTop =
         "15px";
-
 
     panel.style.display =
         "flex";
 
-
     panel.style.flexWrap =
         "wrap";
 
-
     panel.style.gap =
         "8px";
-
 
     panel.innerHTML = `
 
@@ -181,28 +174,27 @@ function createCameraControls() {
 
     `;
 
-
     cameraSection.appendChild(
         panel
     );
 
 
+    // START CAMERA
     document
         .getElementById(
             "remoteStartCameraButton"
         )
         .addEventListener(
             "click",
-            function () {
+            async function () {
 
-                sendCameraCommand(
-                    "start-camera"
-                );
+                await startCamera();
 
             }
         );
 
 
+    // STOP CAMERA
     document
         .getElementById(
             "remoteStopCameraButton"
@@ -211,54 +203,47 @@ function createCameraControls() {
             "click",
             function () {
 
-                sendCameraCommand(
-                    "stop-camera"
-                );
+                stopCamera();
 
             }
         );
 
 
+    // FRONT CAMERA
     document
         .getElementById(
             "switchFrontCameraButton"
         )
         .addEventListener(
             "click",
-            function () {
+            async function () {
 
-                sendCameraCommand(
-                    "switch-camera",
-                    {
-                        facingMode:
-                            "user"
-                    }
+                await switchCamera(
+                    "user"
                 );
 
             }
         );
 
 
+    // REAR CAMERA
     document
         .getElementById(
             "switchRearCameraButton"
         )
         .addEventListener(
             "click",
-            function () {
+            async function () {
 
-                sendCameraCommand(
-                    "switch-camera",
-                    {
-                        facingMode:
-                            "environment"
-                    }
+                await switchCamera(
+                    "environment"
                 );
 
             }
         );
 
 
+    // MUTE / UNMUTE MICROPHONE
     document
         .getElementById(
             "toggleCameraAudioButton"
@@ -270,25 +255,18 @@ function createCameraControls() {
                 cameraAudioEnabled =
                     !cameraAudioEnabled;
 
-
-                sendCameraCommand(
-                    "audio-control",
-                    {
-                        enabled:
-                            cameraAudioEnabled
-                    }
+                setCameraAudio(
+                    cameraAudioEnabled
                 );
-
 
                 this.textContent =
                     cameraAudioEnabled
                         ? "🎤 Mute Audio"
-                        : "🔇 Unmute Audio";
+                        : "🔊 Unmute Audio";
 
             }
         );
 }
-
 
 /* =========================================
    VIEWER CONTROL PANEL
@@ -447,46 +425,31 @@ function createViewerControls() {
 
 
     document
-        .getElementById(
-            "viewerMuteButton"
-        )
-        .addEventListener(
-            "click",
-            function () {
+    .getElementById(
+        "viewerMuteButton"
+    )
+    .addEventListener(
+        "click",
+        function () {
 
-                if (
-                    remoteVideo.srcObject
-                ) {
+            cameraAudioEnabled =
+                !cameraAudioEnabled;
 
-                    const tracks =
-                        remoteVideo
-                            .srcObject
-                            .getAudioTracks();
-
-
-                    tracks.forEach(
-                        function (track) {
-
-                            track.enabled =
-                                !track.enabled;
-
-                        }
-                    );
-
-
-                    this.textContent =
-                        tracks.some(
-                            function (track) {
-                                return track.enabled;
-                            }
-                        )
-                            ? "🔇 Mute"
-                            : "🔊 Unmute";
+            sendCameraCommand(
+                "audio-control",
+                {
+                    enabled:
+                        cameraAudioEnabled
                 }
+            );
 
-            }
-        );
-}
+            this.textContent =
+                cameraAudioEnabled
+                    ? "🔇 Mute"
+                    : "🔊 Unmute";
+
+        }
+    );
 
 
 /* =========================================
@@ -1510,131 +1473,6 @@ async function switchCamera(
         );
     }
 }
-/* =========================================
-   SWITCH CAMERA
-========================================= */
-
-async function switchCamera(
-    facingMode
-) {
-
-    if (!localStream) {
-
-        setStatus(
-            "Camera is not running"
-        );
-
-        return;
-    }
-
-
-    try {
-
-        setStatus(
-            facingMode === "user"
-                ? "Switching to front camera..."
-                : "Switching to rear camera..."
-        );
-
-
-        const newStream =
-            await navigator.mediaDevices
-                .getUserMedia({
-
-                    video: {
-                        facingMode:
-                            facingMode
-                    },
-
-                    audio: false
-
-                });
-
-
-        const newVideoTrack =
-            newStream.getVideoTracks()[0];
-
-
-        const oldVideoTrack =
-            localStream.getVideoTracks()[0];
-
-
-        /*
-           Replace camera track inside
-           the existing WebRTC connection.
-        */
-
-        if (peerConnection) {
-
-            const sender =
-                peerConnection
-                    .getSenders()
-                    .find(
-                        function (item) {
-
-                            return (
-                                item.track &&
-                                item.track.kind ===
-                                    "video"
-                            );
-
-                        }
-                    );
-
-
-            if (sender) {
-
-                await sender.replaceTrack(
-                    newVideoTrack
-                );
-            }
-        }
-
-
-        if (oldVideoTrack) {
-
-            oldVideoTrack.stop();
-        }
-
-
-        localStream.removeTrack(
-            oldVideoTrack
-        );
-
-
-        localStream.addTrack(
-            newVideoTrack
-        );
-
-
-        localVideo.srcObject =
-            localStream;
-
-
-        currentCameraFacing =
-            facingMode;
-
-
-        setStatus(
-            facingMode === "user"
-                ? "Front camera active"
-                : "Rear camera active"
-        );
-
-    } catch (error) {
-
-        console.error(
-            "Camera switch error:",
-            error
-        );
-
-
-        setStatus(
-            "Unable to switch camera"
-        );
-    }
-}
-
 
 /* =========================================
    CAMERA AUDIO
