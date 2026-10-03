@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
         content="width=device-width, initial-scale=1.0"
@@ -9,44 +12,94 @@
 
     <title>Android CCTV</title>
 
-    <link rel="stylesheet" href="style.css">
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
+
 </head>
+
 
 <body>
 
 <div class="app">
 
     <header class="top-bar">
-        <h1>Android CCTV</h1>
-        <span id="connectionStatus">Offline</span>
+
+        <h1>
+            Android CCTV
+        </h1>
+
+        <span id="connectionStatus">
+            Offline
+        </span>
+
     </header>
+
 
     <main>
 
+        <!-- MODE SELECTOR -->
+
         <section class="mode-selector">
 
-            <button id="cameraModeButton">
+            <button
+                id="cameraModeButton"
+            >
                 📷 Camera
             </button>
 
-            <button id="viewerModeButton">
+            <button
+                id="viewerModeButton"
+            >
                 👁️ Viewer
             </button>
 
         </section>
 
 
-        <!-- ============================== -->
+        <!-- ================================= -->
         <!-- CAMERA MODE -->
-        <!-- ============================== -->
+        <!-- ================================= -->
 
-        <section id="cameraMode" class="mode">
+        <section
+            id="cameraMode"
+            class="mode"
+        >
 
-            <h2>Camera Device</h2>
+            <h2>
+                Camera
+            </h2>
 
             <p>
-                This device will provide the live camera feed.
+                Use this device as your CCTV camera.
             </p>
+
+
+            <!-- CAMERA STATUS -->
+
+            <div class="camera-status-card">
+
+                <div class="status-indicator">
+                    🟢
+                </div>
+
+                <div>
+
+                    <strong>
+                        Camera Device
+                    </strong>
+
+                    <p>
+                        Ready to connect
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- LOCAL CAMERA -->
 
             <video
                 id="localVideo"
@@ -55,6 +108,14 @@
                 muted
             ></video>
 
+
+            <!-- CAMERA CONTROLS -->
+
+            <div
+                id="cameraControlContainer"
+            ></div>
+
+
             <button
                 id="startCameraButton"
                 class="primary-button"
@@ -62,106 +123,99 @@
                 📷 Start Camera
             </button>
 
-            <!--
-                Camera controls created by app.js
-            -->
-            <div id="cameraControlContainer"></div>
 
-            <button
-                id="createOfferButton"
-                class="primary-button"
-                disabled
-            >
-                Create Connection
-            </button>
-
-            <h3>Connection Code</h3>
-
-            <textarea
-                id="offerOutput"
-                readonly
-                placeholder="Connection information will appear here..."
-            ></textarea>
-
-            <button
-                id="copyOfferButton"
-                disabled
-            >
-                Copy Connection Code
-            </button>
-
-            <h3>Viewer Response</h3>
-
-            <textarea
-                id="answerInput"
-                placeholder="Paste the viewer response here..."
-            ></textarea>
-
-            <button
-                id="connectCameraButton"
-                disabled
-            >
-                Connect Viewer
-            </button>
+            <p class="connection-message">
+                Your camera will automatically connect
+                to an authorized viewer.
+            </p>
 
         </section>
 
 
-        <!-- ============================== -->
+        <!-- ================================= -->
         <!-- VIEWER MODE -->
-        <!-- ============================== -->
+        <!-- ================================= -->
 
         <section
             id="viewerMode"
             class="mode hidden"
         >
 
-            <h2>Viewer</h2>
+            <h2>
+                My Cameras
+            </h2>
 
             <p>
-                Watch the remote Android camera here.
+                Select a camera to start watching.
             </p>
 
-            <video
-                id="remoteVideo"
-                autoplay
-                playsinline
-                controls
-            ></video>
 
-            <!--
-                Remote camera controls created by app.js
-            -->
-            <div id="viewerControlContainer"></div>
+            <!-- CAMERA CARD -->
 
-            <h3>Camera Connection Code</h3>
+            <div class="camera-card">
 
-            <textarea
-                id="offerInput"
-                placeholder="Paste the camera connection code here..."
-            ></textarea>
+                <div class="camera-card-icon">
+                    📷
+                </div>
 
-            <button
-                id="createAnswerButton"
-                class="primary-button"
+
+                <div class="camera-card-info">
+
+                    <h3>
+                        Android Camera
+                    </h3>
+
+                    <p id="cameraOnlineStatus">
+                        🔴 Offline
+                    </p>
+
+                </div>
+
+
+                <button
+                    id="createAnswerButton"
+                    class="connect-button"
+                >
+                    Connect
+                </button>
+
+            </div>
+
+
+            <!-- LIVE VIDEO -->
+
+            <div class="live-video-container">
+
+                <video
+                    id="remoteVideo"
+                    autoplay
+                    playsinline
+                ></video>
+
+
+                <div
+                    id="liveIndicator"
+                    class="live-indicator"
+                >
+                    🔴 LIVE
+                </div>
+
+            </div>
+
+
+            <!-- VIEWER CONTROLS -->
+
+            <div
+                id="viewerControlContainer"
+            ></div>
+
+
+            <p
+                id="viewerStatusMessage"
+                class="connection-message"
             >
-                Connect to Camera
-            </button>
-
-            <h3>Viewer Response</h3>
-
-            <textarea
-                id="answerOutput"
-                readonly
-                placeholder="Viewer response will appear here..."
-            ></textarea>
-
-            <button
-                id="copyAnswerButton"
-                disabled
-            >
-                Copy Viewer Response
-            </button>
+                Select a camera to connect.
+            </p>
 
         </section>
 
@@ -169,9 +223,17 @@
 
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script src="app.js"></script>
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+></script>
+
+
+<script
+    src="app.js"
+></script>
+
 
 </body>
+
 </html>
