@@ -1877,21 +1877,16 @@ async function createCameraOffer() {
 
     await sendSignalingMessage({
 
-        type:
-            "offer",
+    type:
+        "offer",
 
-        offer:
-            peerConnection.localDescription
+    offer:
+        peerConnection.localDescription,
 
-    });
+    targetCameraId:
+        CAMERA_ID
 
-
-    setStatus(
-        "Waiting for viewer..."
-    );
-}
-
-
+});
 /* =========================================
    PEER CONNECTION
 ========================================= */
