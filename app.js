@@ -1057,7 +1057,6 @@ async function sendCameraPresence() {
     });
 }
 
-
 function handleCameraPresence(
     data
 ) {
@@ -1088,11 +1087,23 @@ function handleCameraPresence(
 
         }
 
+
+        const savedCameraStatus =
+            document.getElementById(
+                "savedCameraStatus"
+            );
+
+
+        if (savedCameraStatus) {
+
+            savedCameraStatus.textContent =
+                "🟢 Online";
+
+        }
+
     }
 
 }
-
-
 function checkCameraOffline() {
 
     if (
@@ -1126,10 +1137,24 @@ function checkCameraOffline() {
 
         if (cameraOnlineStatus) {
 
-            cameraOnlineStatus.textContent =
-                "🔴 Offline";
+    cameraOnlineStatus.textContent =
+        "🔴 Offline";
 
-        }
+}
+
+
+const savedCameraStatus =
+    document.getElementById(
+        "savedCameraStatus"
+    );
+
+
+if (savedCameraStatus) {
+
+    savedCameraStatus.textContent =
+        "🔴 Offline";
+
+}
 
     }
 
