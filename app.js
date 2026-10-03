@@ -1245,24 +1245,34 @@ async function sendCameraCommand(
 ========================================= */
 async function handleCameraRequest(data) {
 
+    console.log(
+        "CAMERA REQUEST RECEIVED:",
+        data
+    );
+
     if (
         cameraSection.classList.contains(
             "hidden"
         )
     ) {
 
+        console.log(
+            "Ignoring request because Camera mode is hidden."
+        );
+
         return;
     }
 
 
     if (
-        data.targetCameraId &&
         data.targetCameraId !== CAMERA_ID
     ) {
 
         console.log(
-            "Ignoring request for another camera:",
-            data.targetCameraId
+            "Request is for another camera:",
+            data.targetCameraId,
+            "My Camera ID:",
+            CAMERA_ID
         );
 
         return;
@@ -1270,7 +1280,7 @@ async function handleCameraRequest(data) {
 
 
     console.log(
-        "Viewer requested this camera:",
+        "REQUEST MATCHED MY CAMERA:",
         CAMERA_ID
     );
 
@@ -1278,11 +1288,16 @@ async function handleCameraRequest(data) {
     if (!localStream) {
 
         setStatus(
-            "Viewer is waiting — start camera"
+            "Viewer requested camera — start camera"
         );
 
         return;
     }
+
+
+    setStatus(
+        "Viewer request received"
+    );
 
 
     await createCameraOffer();
