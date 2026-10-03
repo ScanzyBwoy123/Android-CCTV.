@@ -242,19 +242,20 @@ function connectToSignalingServer() {
     };
 
 
-    signalingSocket.onclose = function () {
+    signalingSocket.onclose = function (event) {
+    console.log("SIGNALING SOCKET CLOSED");
+    console.log("Close code:", event.code);
+    console.log("Close reason:", event.reason);
+    console.log("Was clean:", event.wasClean);
 
-        console.log(
-            "Signaling server disconnected"
-        );
+    setStatus(
+        "Signaling server disconnected (" +
+        event.code +
+        ")"
+    );
 
-        setStatus(
-            "Signaling server disconnected"
-        );
-
-        signalingSocket = null;
-    };
-}
+    signalingSocket = null;
+};
 
 
 function sendSignalingMessage(message) {
