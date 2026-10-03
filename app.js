@@ -53,6 +53,17 @@ function getCameraId() {
 
 const CAMERA_ID =
     getCameraId();
+const cameraIdDisplay =
+    document.getElementById(
+        "cameraIdDisplay"
+    );
+
+if (cameraIdDisplay) {
+
+    cameraIdDisplay.textContent =
+        CAMERA_ID;
+
+}
 let cameraHeartbeatTimer = null;
 
 let lastCameraHeartbeat = 0;
