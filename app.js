@@ -1243,15 +1243,7 @@ async function sendCameraCommand(
 /* =========================================
    HANDLE CAMERA COMMAND
 ========================================= */
-
-async function handleCameraCommand(
-    data
-) {
-
-    /*
-       Only Camera mode handles
-       remote camera commands.
-    */
+async function handleCameraRequest(data) {
 
     if (
         cameraSection.classList.contains(
@@ -1264,68 +1256,38 @@ async function handleCameraCommand(
 
 
     if (
-        data.command ===
-        "start-camera"
+        data.targetCameraId &&
+        data.targetCameraId !== CAMERA_ID
     ) {
 
-        await startCameraFromCommand();
-
-        return;
-    }
-
-
-    if (
-        data.command ===
-        "stop-camera"
-    ) {
-
-        stopCamera();
-
-        return;
-    }
-
-
-    if (
-        data.command ===
-        "switch-camera"
-    ) {
-
-        const facingMode =
-            data.options &&
-            data.options.facingMode
-                ? data.options.facingMode
-                : "environment";
-
-
-        await switchCamera(
-            facingMode
+        console.log(
+            "Ignoring request for another camera:",
+            data.targetCameraId
         );
 
         return;
     }
 
 
-    if (
-        data.command ===
-        "audio-control"
-    ) {
-
-        const enabled =
-            data.options &&
-            typeof data.options.enabled ===
-                "boolean"
-                ? data.options.enabled
-                : true;
+    console.log(
+        "Viewer requested this camera:",
+        CAMERA_ID
+    );
 
 
-        setCameraAudio(
-            enabled
+    if (!localStream) {
+
+        setStatus(
+            "Viewer is waiting — start camera"
         );
 
+        return;
     }
+
+
+    await createCameraOffer();
+
 }
-
-
 /* =========================================
    START CAMERA
 ========================================= */
