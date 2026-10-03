@@ -140,7 +140,6 @@ cameraModeButton.addEventListener(
     showCameraMode
 );
 
-
 viewerModeButton.addEventListener(
     "click",
     showViewerMode
@@ -148,7 +147,7 @@ viewerModeButton.addEventListener(
 
 
 /* =========================================
-   SUPABASE REALTIME SIGNALING
+   SUPABASE REALTIME
 ========================================= */
 
 async function connectToSignalingServer() {
@@ -193,13 +192,32 @@ async function connectToSignalingServer() {
                 const data =
                     message.payload;
 
+
                 console.log(
-                    "Supabase signal received:",
+                    "Signal received:",
                     data.type
                 );
 
 
-                if (data.type === "offer") {
+                /* CAMERA RECEIVES VIEWER REQUEST */
+
+                if (
+                    data.type ===
+                    "request-camera"
+                ) {
+
+                    await handleCameraRequest();
+
+                    return;
+                }
+
+
+                /* VIEWER RECEIVES CAMERA OFFER */
+
+                if (
+                    data.type ===
+                    "offer"
+                ) {
 
                     await handleIncomingOffer(
                         data
@@ -209,7 +227,12 @@ async function connectToSignalingServer() {
                 }
 
 
-                if (data.type === "answer") {
+                /* CAMERA RECEIVES VIEWER ANSWER */
+
+                if (
+                    data.type ===
+                    "answer"
+                ) {
 
                     await handleIncomingAnswer(
                         data
@@ -219,7 +242,12 @@ async function connectToSignalingServer() {
                 }
 
 
-                if (data.type === "candidate") {
+                /* BOTH DEVICES RECEIVE ICE */
+
+                if (
+                    data.type ===
+                    "candidate"
+                ) {
 
                     await handleIncomingCandidate(
                         data
@@ -248,14 +276,13 @@ async function connectToSignalingServer() {
             );
 
 
-            if (status === "SUBSCRIBED") {
+            if (
+                status ===
+                "SUBSCRIBED"
+            ) {
 
                 setStatus(
                     "Signaling server connected"
-                );
-
-                console.log(
-                    "Supabase Realtime connected"
                 );
 
                 return;
@@ -263,7 +290,8 @@ async function connectToSignalingServer() {
 
 
             if (
-                status === "CHANNEL_ERROR"
+                status ===
+                "CHANNEL_ERROR"
             ) {
 
                 console.error(
@@ -280,12 +308,9 @@ async function connectToSignalingServer() {
 
 
             if (
-                status === "TIMED_OUT"
+                status ===
+                "TIMED_OUT"
             ) {
-
-                console.error(
-                    "Supabase channel timed out"
-                );
 
                 setStatus(
                     "Supabase connection timed out"
@@ -296,18 +321,16 @@ async function connectToSignalingServer() {
 
 
             if (
-                status === "CLOSED"
+                status ===
+                "CLOSED"
             ) {
 
-                console.log(
-                    "Supabase channel closed"
-                );
+                signalingChannel =
+                    null;
 
                 setStatus(
                     "Supabase signaling disconnected"
                 );
-
-                signalingChannel = null;
             }
         }
     );
@@ -315,7 +338,7 @@ async function connectToSignalingServer() {
 
 
 /* =========================================
-   SEND SIGNALING MESSAGE
+   SEND SIGNAL
 ========================================= */
 
 async function sendSignalingMessage(
@@ -325,7 +348,7 @@ async function sendSignalingMessage(
     if (!signalingChannel) {
 
         console.log(
-            "Supabase channel is not connected"
+            "Supabase channel unavailable"
         );
 
         return;
@@ -334,28 +357,26 @@ async function sendSignalingMessage(
 
     try {
 
-        const result =
-            await signalingChannel.send({
+        await signalingChannel.send({
 
-                type: "broadcast",
+            type: "broadcast",
 
-                event: "signal",
+            event: "signal",
 
-                payload: message
+            payload: message
 
-            });
+        });
 
 
         console.log(
-            "Sent Supabase signal:",
-            message.type,
-            result
+            "Signal sent:",
+            message.type
         );
 
     } catch (error) {
 
         console.error(
-            "Supabase send error:",
+            "Signal send error:",
             error
         );
     }
@@ -376,6 +397,10 @@ function createPeerConnection(
         );
 
 
+    /*
+       CAMERA SENDS CAMERA/MICROPHONE
+    */
+
     if (
         !isViewer &&
         localStream
@@ -389,10 +414,13 @@ function createPeerConnection(
                     track,
                     localStream
                 );
-
             });
     }
 
+
+    /*
+       VIEWER RECEIVES CAMERA
+    */
 
     peerConnection.ontrack =
         function (event) {
@@ -419,20 +447,26 @@ function createPeerConnection(
                             "Video playback waiting:",
                             error
                         );
-
                     });
             }
         };
 
 
+    /*
+       ICE CANDIDATES
+    */
+
     peerConnection.onicecandidate =
         function (event) {
 
-            if (event.candidate) {
+            if (
+                event.candidate
+            ) {
 
                 sendSignalingMessage({
 
-                    type: "candidate",
+                    type:
+                        "candidate",
 
                     candidate:
                         event.candidate
@@ -442,6 +476,10 @@ function createPeerConnection(
         };
 
 
+    /*
+       REAL WEBRTC STATUS
+    */
+
     peerConnection.onconnectionstatechange =
         function () {
 
@@ -450,14 +488,64 @@ function createPeerConnection(
 
 
             console.log(
-                "WebRTC connection state:",
+                "WebRTC state:",
                 state
             );
 
 
-            setStatus(
-                "Connection: " + state
-            );
+            if (
+                state ===
+                "connected"
+            ) {
+
+                setStatus(
+                    "📹 Live camera connected"
+                );
+            }
+
+
+            else if (
+                state ===
+                "connecting"
+            ) {
+
+                setStatus(
+                    "Connecting video..."
+                );
+            }
+
+
+            else if (
+                state ===
+                "disconnected"
+            ) {
+
+                setStatus(
+                    "Video connection interrupted"
+                );
+            }
+
+
+            else if (
+                state ===
+                "failed"
+            ) {
+
+                setStatus(
+                    "Video connection failed"
+                );
+            }
+
+
+            else if (
+                state ===
+                "closed"
+            ) {
+
+                setStatus(
+                    "Video connection closed"
+                );
+            }
         };
 }
 
@@ -469,11 +557,6 @@ function createPeerConnection(
 startCameraButton.addEventListener(
     "click",
     async function () {
-
-        console.log(
-            "START CAMERA BUTTON CLICKED"
-        );
-
 
         try {
 
@@ -499,18 +582,14 @@ startCameraButton.addEventListener(
 
                         video: {
                             facingMode: {
-                                ideal: "environment"
+                                ideal:
+                                    "environment"
                             }
                         },
 
                         audio: true
 
                     });
-
-
-            console.log(
-                "Camera stream received"
-            );
 
 
             localVideo.srcObject =
@@ -525,7 +604,7 @@ startCameraButton.addEventListener(
 
 
             setStatus(
-                "Camera started successfully"
+                "Camera ready and waiting"
             );
 
 
@@ -555,114 +634,177 @@ startCameraButton.addEventListener(
 
 
 /* =========================================
-   CAMERA CREATES OFFER
+   VIEWER REQUESTS CAMERA
+========================================= */
+
+createAnswerButton.addEventListener(
+    "click",
+    async function () {
+
+        try {
+
+            setStatus(
+                "Requesting camera..."
+            );
+
+
+            await connectToSignalingServer();
+
+
+            await sendSignalingMessage({
+
+                type:
+                    "request-camera"
+
+            });
+
+
+            answerOutput.value =
+                "Camera request sent automatically";
+
+
+            setStatus(
+                "Waiting for camera..."
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Camera request error:",
+                error
+            );
+
+
+            setStatus(
+                "Camera request failed"
+            );
+        }
+    }
+);
+
+
+/* =========================================
+   CAMERA RECEIVES REQUEST
+========================================= */
+
+async function handleCameraRequest() {
+
+    try {
+
+        if (
+            cameraSection.classList.contains(
+                "hidden"
+            )
+        ) {
+
+            return;
+        }
+
+
+        console.log(
+            "Viewer requested camera"
+        );
+
+
+        /*
+           If camera has not been started,
+           the browser cannot silently request
+           camera permission.
+        */
+
+        if (!localStream) {
+
+            setStatus(
+                "Viewer requested camera — start camera"
+            );
+
+
+            alert(
+                "A viewer is requesting this camera.\n\n" +
+                "Tap Start Camera to allow the camera."
+            );
+
+
+            return;
+        }
+
+
+        if (peerConnection) {
+
+            peerConnection.close();
+        }
+
+
+        setStatus(
+            "Viewer detected. Creating connection..."
+        );
+
+
+        createPeerConnection(false);
+
+
+        const offer =
+            await peerConnection.createOffer();
+
+
+        await peerConnection.setLocalDescription(
+            offer
+        );
+
+
+        await sendSignalingMessage({
+
+            type:
+                "offer",
+
+            offer:
+                peerConnection.localDescription
+
+        });
+
+
+        offerOutput.value =
+            "Camera connection sent to viewer";
+
+
+        setStatus(
+            "Camera connection sent"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Camera request handling error:",
+            error
+        );
+
+
+        setStatus(
+            "Camera connection error"
+        );
+    }
+}
+
+
+/* =========================================
+   OLD CAMERA CREATE BUTTON
 ========================================= */
 
 createOfferButton.addEventListener(
     "click",
     async function () {
 
-        try {
+        if (!localStream) {
 
-            if (!localStream) {
-
-                alert(
-                    "Start the camera first."
-                );
-
-                return;
-            }
-
-
-            if (!signalingChannel) {
-
-                setStatus(
-                    "Waiting for signaling connection..."
-                );
-
-                await connectToSignalingServer();
-
-                await new Promise(
-                    function (resolve) {
-
-                        const check =
-                            setInterval(
-                                function () {
-
-                                    if (
-                                        signalingChannel
-                                    ) {
-
-                                        clearInterval(
-                                            check
-                                        );
-
-                                        resolve();
-                                    }
-
-                                },
-                                200
-                            );
-
-                    }
-                );
-            }
-
-
-            if (peerConnection) {
-
-                peerConnection.close();
-            }
-
-
-            setStatus(
-                "Creating camera connection..."
+            alert(
+                "Start the camera first."
             );
 
-
-            createPeerConnection(false);
-
-
-            const offer =
-                await peerConnection.createOffer();
-
-
-            await peerConnection.setLocalDescription(
-                offer
-            );
-
-
-            await sendSignalingMessage({
-
-                type: "offer",
-
-                offer:
-                    peerConnection.localDescription
-
-            });
-
-
-            offerOutput.value =
-                "Camera connection sent automatically";
-
-
-            setStatus(
-                "Camera connection sent"
-            );
-
-        } catch (error) {
-
-            console.error(
-                "Offer error:",
-                error
-            );
-
-
-            setStatus(
-                "Offer error: " +
-                error.message
-            );
+            return;
         }
+
+
+        await handleCameraRequest();
     }
 );
 
@@ -683,10 +825,6 @@ async function handleIncomingOffer(
             )
         ) {
 
-            console.log(
-                "Offer received but this device is not in Viewer mode"
-            );
-
             return;
         }
 
@@ -698,7 +836,7 @@ async function handleIncomingOffer(
 
 
         setStatus(
-            "Camera found. Connecting..."
+            "Camera found. Connecting video..."
         );
 
 
@@ -721,7 +859,8 @@ async function handleIncomingOffer(
 
         await sendSignalingMessage({
 
-            type: "answer",
+            type:
+                "answer",
 
             answer:
                 peerConnection.localDescription
@@ -730,11 +869,11 @@ async function handleIncomingOffer(
 
 
         answerOutput.value =
-            "Viewer response sent automatically";
+            "Camera response received automatically";
 
 
         setStatus(
-            "Viewer connected to camera"
+            "Camera response sent"
         );
 
     } catch (error) {
@@ -774,7 +913,7 @@ async function handleIncomingAnswer(
 
 
             setStatus(
-                "Camera connected to viewer"
+                "Viewer response received"
             );
         }
 
@@ -819,7 +958,7 @@ async function handleIncomingCandidate(
 
 
 /* =========================================
-   OLD MANUAL BUTTONS
+   OLD MANUAL CAMERA BUTTON
 ========================================= */
 
 connectCameraButton.addEventListener(
@@ -827,18 +966,7 @@ connectCameraButton.addEventListener(
     function () {
 
         alert(
-            "Manual connection is no longer required."
-        );
-    }
-);
-
-
-createAnswerButton.addEventListener(
-    "click",
-    function () {
-
-        alert(
-            "Manual answer creation is no longer required."
+            "The viewer now requests the camera automatically."
         );
     }
 );
@@ -858,7 +986,6 @@ copyOfferButton.addEventListener(
                 offerOutput.value
             );
 
-
             setStatus(
                 "Information copied"
             );
@@ -870,7 +997,6 @@ copyOfferButton.addEventListener(
             document.execCommand(
                 "copy"
             );
-
 
             setStatus(
                 "Information copied"
@@ -890,7 +1016,6 @@ copyAnswerButton.addEventListener(
                 answerOutput.value
             );
 
-
             setStatus(
                 "Information copied"
             );
@@ -902,7 +1027,6 @@ copyAnswerButton.addEventListener(
             document.execCommand(
                 "copy"
             );
-
 
             setStatus(
                 "Information copied"
