@@ -1723,6 +1723,20 @@ createAnswerButton.addEventListener(
 
         try {
 
+            const selectedCameraId =
+                getSavedCameraId();
+
+            if (!selectedCameraId) {
+
+                setViewerStatus(
+                    "Please add a camera first."
+                );
+
+                return;
+
+            }
+
+
             setViewerStatus(
                 "Connecting to camera..."
             );
@@ -1739,7 +1753,10 @@ createAnswerButton.addEventListener(
             await sendSignalingMessage({
 
                 type:
-                    "request-camera"
+                    "request-camera",
+
+                targetCameraId:
+                    selectedCameraId
 
             });
 
@@ -1765,8 +1782,6 @@ createAnswerButton.addEventListener(
 
     }
 );
-
-
 /* =========================================
    CAMERA RECEIVES VIEWER REQUEST
 ========================================= */
