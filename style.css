@@ -301,3 +301,25 @@ button:disabled {
 .mode.active {
     display: block;
 }
+/* =========================================
+   CCTV SECTION SPACING
+========================================= */
+
+.mode {
+    width: 100%;
+    margin-bottom: 40px;
+}
+
+#cameraMode {
+    margin-bottom: 40px;
+}
+
+#viewerMode {
+    margin-top: 40px;
+    padding-top: 20px;
+}
+
+#viewerMode h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
