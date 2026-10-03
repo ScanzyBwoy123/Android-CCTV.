@@ -13,7 +13,13 @@ const SUPABASE_PUBLISHABLE_KEY =
 
 const ROOM_ID =
     "android-cctv-demo";
+let cameraHeartbeatTimer = null;
 
+let lastCameraHeartbeat = 0;
+
+const CAMERA_HEARTBEAT_INTERVAL = 5000;
+
+const CAMERA_OFFLINE_TIMEOUT = 15000;
 const configuration = {
     iceServers: [
         {
@@ -594,7 +600,17 @@ async function connectToSignalingServer() {
                     "Signal received:",
                     data.type
                 );
+if (
+    data.type ===
+    "camera-presence"
+) {
 
+    handleCameraPresence(
+        data
+    );
+
+    return;
+}
 
                 if (
                     data.type ===
@@ -740,7 +756,153 @@ async function connectToSignalingServer() {
         }
     );
 }
+/* =========================================
+   CAMERA ONLINE / OFFLINE HEARTBEAT
+========================================= */
 
+function startCameraHeartbeat() {
+
+    stopCameraHeartbeat();
+
+
+    sendCameraPresence();
+
+
+    cameraHeartbeatTimer =
+        setInterval(
+            function () {
+
+                sendCameraPresence();
+
+            },
+            CAMERA_HEARTBEAT_INTERVAL
+        );
+}
+
+
+function stopCameraHeartbeat() {
+
+    if (
+        cameraHeartbeatTimer
+    ) {
+
+        clearInterval(
+            cameraHeartbeatTimer
+        );
+
+        cameraHeartbeatTimer =
+            null;
+    }
+}
+
+
+async function sendCameraPresence() {
+
+    if (
+        !localStream
+    ) {
+
+        return;
+    }
+
+
+    await sendSignalingMessage({
+
+        type:
+            "camera-presence",
+
+        online:
+            true,
+
+        timestamp:
+            Date.now()
+
+    });
+}
+
+
+function handleCameraPresence(
+    data
+) {
+
+    if (
+        !viewerSection ||
+        viewerSection.classList.contains(
+            "hidden"
+        )
+    ) {
+
+        return;
+    }
+
+
+    if (
+        data.online === true
+    ) {
+
+        lastCameraHeartbeat =
+            Date.now();
+
+
+        if (cameraOnlineStatus) {
+
+            cameraOnlineStatus.textContent =
+                "🟢 Online";
+
+        }
+
+    }
+
+}
+
+
+function checkCameraOffline() {
+
+    if (
+        !viewerSection ||
+        viewerSection.classList.contains(
+            "hidden"
+        )
+    ) {
+
+        return;
+    }
+
+
+    if (
+        lastCameraHeartbeat === 0
+    ) {
+
+        return;
+    }
+
+
+    const elapsed =
+        Date.now() -
+        lastCameraHeartbeat;
+
+
+    if (
+        elapsed >
+        CAMERA_OFFLINE_TIMEOUT
+    ) {
+
+        if (cameraOnlineStatus) {
+
+            cameraOnlineStatus.textContent =
+                "🔴 Offline";
+
+        }
+
+    }
+
+}
+
+
+setInterval(
+    checkCameraOffline,
+    5000
+);
 
 /* =========================================
    SEND SIGNAL
@@ -991,7 +1153,7 @@ async function startCamera() {
         setCameraOnlineStatus(
             true
         );
-
+startCameraHeartbeat();
 
         setStatus(
             "Camera online"
@@ -1104,7 +1266,7 @@ function stopCamera() {
 
     }
 
-
+stopCameraHeartbeat();
     setCameraOnlineStatus(
         false
     );
