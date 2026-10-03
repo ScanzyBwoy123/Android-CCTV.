@@ -2,6 +2,9 @@ let localStream = null;
 let peerConnection = null;
 let signalingChannel = null;
 
+let currentCameraFacing = "environment";
+let cameraAudioEnabled = true;
+
 const SUPABASE_URL =
     "https://vsdujfqygetvwgbfrjzj.supabase.co";
 
@@ -100,20 +103,417 @@ function setStatus(message) {
 
 
 /* =========================================
-   CAMERA / VIEWER MODE
+   CREATE CONTROL BUTTONS
+   These are created automatically so
+   index.html does not need to change yet.
+========================================= */
+
+function createCameraControls() {
+
+    if (
+        document.getElementById(
+            "cameraControlPanel"
+        )
+    ) {
+        return;
+    }
+
+
+    const panel =
+        document.createElement("div");
+
+    panel.id =
+        "cameraControlPanel";
+
+
+    panel.style.marginTop =
+        "15px";
+
+
+    panel.style.display =
+        "flex";
+
+
+    panel.style.flexWrap =
+        "wrap";
+
+
+    panel.style.gap =
+        "8px";
+
+
+    panel.innerHTML = `
+
+        <button
+            type="button"
+            id="remoteStartCameraButton"
+        >
+            📹 Start Camera
+        </button>
+
+        <button
+            type="button"
+            id="remoteStopCameraButton"
+        >
+            ⏹ Stop Camera
+        </button>
+
+        <button
+            type="button"
+            id="switchFrontCameraButton"
+        >
+            🔄 Front Camera
+        </button>
+
+        <button
+            type="button"
+            id="switchRearCameraButton"
+        >
+            🔄 Rear Camera
+        </button>
+
+        <button
+            type="button"
+            id="toggleCameraAudioButton"
+        >
+            🎤 Mute Audio
+        </button>
+
+    `;
+
+
+    cameraSection.appendChild(
+        panel
+    );
+
+
+    document
+        .getElementById(
+            "remoteStartCameraButton"
+        )
+        .addEventListener(
+            "click",
+            function () {
+
+                sendCameraCommand(
+                    "start-camera"
+                );
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "remoteStopCameraButton"
+        )
+        .addEventListener(
+            "click",
+            function () {
+
+                sendCameraCommand(
+                    "stop-camera"
+                );
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "switchFrontCameraButton"
+        )
+        .addEventListener(
+            "click",
+            function () {
+
+                sendCameraCommand(
+                    "switch-camera",
+                    {
+                        facingMode:
+                            "user"
+                    }
+                );
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "switchRearCameraButton"
+        )
+        .addEventListener(
+            "click",
+            function () {
+
+                sendCameraCommand(
+                    "switch-camera",
+                    {
+                        facingMode:
+                            "environment"
+                    }
+                );
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "toggleCameraAudioButton"
+        )
+        .addEventListener(
+            "click",
+            function () {
+
+                cameraAudioEnabled =
+                    !cameraAudioEnabled;
+
+
+                sendCameraCommand(
+                    "audio-control",
+                    {
+                        enabled:
+                            cameraAudioEnabled
+                    }
+                );
+
+
+                this.textContent =
+                    cameraAudioEnabled
+                        ? "🎤 Mute Audio"
+                        : "🔇 Unmute Audio";
+
+            }
+        );
+}
+
+
+/* =========================================
+   VIEWER CONTROL PANEL
+========================================= */
+
+function createViewerControls() {
+
+    if (
+        document.getElementById(
+            "viewerControlPanel"
+        )
+    ) {
+        return;
+    }
+
+
+    const panel =
+        document.createElement("div");
+
+
+    panel.id =
+        "viewerControlPanel";
+
+
+    panel.style.marginTop =
+        "15px";
+
+
+    panel.style.display =
+        "flex";
+
+
+    panel.style.flexWrap =
+        "wrap";
+
+
+    panel.style.gap =
+        "8px";
+
+
+    panel.innerHTML = `
+
+        <button
+            type="button"
+            id="viewerStartCameraButton"
+        >
+            📹 Start Camera
+        </button>
+
+        <button
+            type="button"
+            id="viewerStopCameraButton"
+        >
+            ⏹ Stop Camera
+        </button>
+
+        <button
+            type="button"
+            id="viewerFrontCameraButton"
+        >
+            🔄 Front
+        </button>
+
+        <button
+            type="button"
+            id="viewerRearCameraButton"
+        >
+            🔄 Rear
+        </button>
+
+        <button
+            type="button"
+            id="viewerMuteButton"
+        >
+            🔇 Mute
+        </button>
+
+    `;
+
+
+    viewerSection.appendChild(
+        panel
+    );
+
+
+    document
+        .getElementById(
+            "viewerStartCameraButton"
+        )
+        .addEventListener(
+            "click",
+            function () {
+
+                sendCameraCommand(
+                    "start-camera"
+                );
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "viewerStopCameraButton"
+        )
+        .addEventListener(
+            "click",
+            function () {
+
+                sendCameraCommand(
+                    "stop-camera"
+                );
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "viewerFrontCameraButton"
+        )
+        .addEventListener(
+            "click",
+            function () {
+
+                sendCameraCommand(
+                    "switch-camera",
+                    {
+                        facingMode:
+                            "user"
+                    }
+                );
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "viewerRearCameraButton"
+        )
+        .addEventListener(
+            "click",
+            function () {
+
+                sendCameraCommand(
+                    "switch-camera",
+                    {
+                        facingMode:
+                            "environment"
+                    }
+                );
+
+            }
+        );
+
+
+    document
+        .getElementById(
+            "viewerMuteButton"
+        )
+        .addEventListener(
+            "click",
+            function () {
+
+                if (
+                    remoteVideo.srcObject
+                ) {
+
+                    const tracks =
+                        remoteVideo
+                            .srcObject
+                            .getAudioTracks();
+
+
+                    tracks.forEach(
+                        function (track) {
+
+                            track.enabled =
+                                !track.enabled;
+
+                        }
+                    );
+
+
+                    this.textContent =
+                        tracks.some(
+                            function (track) {
+                                return track.enabled;
+                            }
+                        )
+                            ? "🔇 Mute"
+                            : "🔊 Unmute";
+                }
+
+            }
+        );
+}
+
+
+/* =========================================
+   CAMERA MODE
 ========================================= */
 
 function showCameraMode() {
 
-    cameraSection.classList.remove("hidden");
+    cameraSection.classList.remove(
+        "hidden"
+    );
 
-    viewerSection.classList.add("hidden");
+    viewerSection.classList.add(
+        "hidden"
+    );
 
-    cameraModeButton.classList.add("active");
+    cameraModeButton.classList.add(
+        "active"
+    );
 
-    viewerModeButton.classList.remove("active");
+    viewerModeButton.classList.remove(
+        "active"
+    );
 
-    setStatus("Camera mode");
+    setStatus(
+        "Camera mode"
+    );
 
     connectToSignalingServer();
 }
@@ -121,15 +521,25 @@ function showCameraMode() {
 
 function showViewerMode() {
 
-    cameraSection.classList.add("hidden");
+    cameraSection.classList.add(
+        "hidden"
+    );
 
-    viewerSection.classList.remove("hidden");
+    viewerSection.classList.remove(
+        "hidden"
+    );
 
-    viewerModeButton.classList.add("active");
+    viewerModeButton.classList.add(
+        "active"
+    );
 
-    cameraModeButton.classList.remove("active");
+    cameraModeButton.classList.remove(
+        "active"
+    );
 
-    setStatus("Viewer mode");
+    setStatus(
+        "Viewer mode"
+    );
 
     connectToSignalingServer();
 }
@@ -139,6 +549,7 @@ cameraModeButton.addEventListener(
     "click",
     showCameraMode
 );
+
 
 viewerModeButton.addEventListener(
     "click",
@@ -153,10 +564,6 @@ viewerModeButton.addEventListener(
 async function connectToSignalingServer() {
 
     if (signalingChannel) {
-
-        console.log(
-            "Supabase signaling already connected"
-        );
 
         return;
     }
@@ -199,7 +606,9 @@ async function connectToSignalingServer() {
                 );
 
 
-                /* CAMERA RECEIVES VIEWER REQUEST */
+                /* =================================
+                   VIEWER REQUESTS CAMERA
+                ================================= */
 
                 if (
                     data.type ===
@@ -212,7 +621,26 @@ async function connectToSignalingServer() {
                 }
 
 
-                /* VIEWER RECEIVES CAMERA OFFER */
+                /* =================================
+                   CAMERA REMOTE COMMANDS
+                ================================= */
+
+                if (
+                    data.type ===
+                    "camera-command"
+                ) {
+
+                    await handleCameraCommand(
+                        data
+                    );
+
+                    return;
+                }
+
+
+                /* =================================
+                   VIEWER RECEIVES OFFER
+                ================================= */
 
                 if (
                     data.type ===
@@ -227,7 +655,9 @@ async function connectToSignalingServer() {
                 }
 
 
-                /* CAMERA RECEIVES VIEWER ANSWER */
+                /* =================================
+                   CAMERA RECEIVES ANSWER
+                ================================= */
 
                 if (
                     data.type ===
@@ -242,7 +672,9 @@ async function connectToSignalingServer() {
                 }
 
 
-                /* BOTH DEVICES RECEIVE ICE */
+                /* =================================
+                   ICE
+                ================================= */
 
                 if (
                     data.type ===
@@ -347,8 +779,14 @@ async function sendSignalingMessage(
 
     if (!signalingChannel) {
 
-        console.log(
-            "Supabase channel unavailable"
+        await connectToSignalingServer();
+    }
+
+
+    if (!signalingChannel) {
+
+        setStatus(
+            "Signaling server unavailable"
         );
 
         return;
@@ -359,11 +797,14 @@ async function sendSignalingMessage(
 
         await signalingChannel.send({
 
-            type: "broadcast",
+            type:
+                "broadcast",
 
-            event: "signal",
+            event:
+                "signal",
 
-            payload: message
+            payload:
+                message
 
         });
 
@@ -384,169 +825,139 @@ async function sendSignalingMessage(
 
 
 /* =========================================
-   PEER CONNECTION
+   SEND CAMERA COMMAND
 ========================================= */
 
-function createPeerConnection(
-    isViewer
+async function sendCameraCommand(
+    command,
+    options = {}
 ) {
 
-    peerConnection =
-        new RTCPeerConnection(
-            configuration
+    try {
+
+        await sendSignalingMessage({
+
+            type:
+                "camera-command",
+
+            command:
+                command,
+
+            options:
+                options
+
+        });
+
+
+        setStatus(
+            "Camera command sent: " +
+            command
         );
 
+    } catch (error) {
+
+        console.error(
+            "Camera command error:",
+            error
+        );
+
+        setStatus(
+            "Camera command failed"
+        );
+    }
+}
+
+
+/* =========================================
+   HANDLE CAMERA COMMAND
+========================================= */
+
+async function handleCameraCommand(
+    data
+) {
 
     /*
-       CAMERA SENDS CAMERA/MICROPHONE
+       Camera only.
+       Viewer ignores camera commands.
     */
 
     if (
-        !isViewer &&
-        localStream
+        cameraSection.classList.contains(
+            "hidden"
+        )
     ) {
 
-        localStream
-            .getTracks()
-            .forEach(function (track) {
-
-                peerConnection.addTrack(
-                    track,
-                    localStream
-                );
-            });
+        return;
     }
 
 
-    /*
-       VIEWER RECEIVES CAMERA
-    */
-
-    peerConnection.ontrack =
-        function (event) {
-
-            console.log(
-                "Remote media received"
-            );
+    console.log(
+        "Camera command received:",
+        data.command
+    );
 
 
-            if (
-                event.streams &&
-                event.streams[0]
-            ) {
+    if (
+        data.command ===
+        "start-camera"
+    ) {
 
-                remoteVideo.srcObject =
-                    event.streams[0];
+        await startCameraFromCommand();
 
-
-                remoteVideo
-                    .play()
-                    .catch(function (error) {
-
-                        console.log(
-                            "Video playback waiting:",
-                            error
-                        );
-                    });
-            }
-        };
+        return;
+    }
 
 
-    /*
-       ICE CANDIDATES
-    */
+    if (
+        data.command ===
+        "stop-camera"
+    ) {
 
-    peerConnection.onicecandidate =
-        function (event) {
+        stopCamera();
 
-            if (
-                event.candidate
-            ) {
-
-                sendSignalingMessage({
-
-                    type:
-                        "candidate",
-
-                    candidate:
-                        event.candidate
-
-                });
-            }
-        };
+        return;
+    }
 
 
-    /*
-       REAL WEBRTC STATUS
-    */
+    if (
+        data.command ===
+        "switch-camera"
+    ) {
 
-    peerConnection.onconnectionstatechange =
-        function () {
-
-            const state =
-                peerConnection.connectionState;
-
-
-            console.log(
-                "WebRTC state:",
-                state
-            );
+        const facingMode =
+            data.options &&
+            data.options.facingMode
+                ? data.options.facingMode
+                : "environment";
 
 
-            if (
-                state ===
-                "connected"
-            ) {
+        await switchCamera(
+            facingMode
+        );
 
-                setStatus(
-                    "📹 Live camera connected"
-                );
-            }
+        return;
+    }
 
 
-            else if (
-                state ===
-                "connecting"
-            ) {
+    if (
+        data.command ===
+        "audio-control"
+    ) {
 
-                setStatus(
-                    "Connecting video..."
-                );
-            }
-
-
-            else if (
-                state ===
-                "disconnected"
-            ) {
-
-                setStatus(
-                    "Video connection interrupted"
-                );
-            }
+        const enabled =
+            data.options &&
+            typeof data.options.enabled ===
+                "boolean"
+                ? data.options.enabled
+                : true;
 
 
-            else if (
-                state ===
-                "failed"
-            ) {
+        setCameraAudio(
+            enabled
+        );
 
-                setStatus(
-                    "Video connection failed"
-                );
-            }
-
-
-            else if (
-                state ===
-                "closed"
-            ) {
-
-                setStatus(
-                    "Video connection closed"
-                );
-            }
-        };
+        return;
+    }
 }
 
 
@@ -554,83 +965,366 @@ function createPeerConnection(
    START CAMERA
 ========================================= */
 
-startCameraButton.addEventListener(
-    "click",
-    async function () {
+async function startCamera() {
 
-        try {
+    try {
 
-            setStatus(
-                "Requesting camera permission..."
-            );
+        setStatus(
+            "Requesting camera permission..."
+        );
 
 
-            if (
-                !navigator.mediaDevices ||
-                !navigator.mediaDevices.getUserMedia
-            ) {
+        if (
+            !navigator.mediaDevices ||
+            !navigator.mediaDevices.getUserMedia
+        ) {
 
-                throw new Error(
-                    "Camera API is not available"
-                );
-            }
-
-
-            localStream =
-                await navigator.mediaDevices
-                    .getUserMedia({
-
-                        video: {
-                            facingMode: {
-                                ideal:
-                                    "environment"
-                            }
-                        },
-
-                        audio: true
-
-                    });
-
-
-            localVideo.srcObject =
-                localStream;
-
-
-            await localVideo.play();
-
-
-            createOfferButton.disabled =
-                false;
-
-
-            setStatus(
-                "Camera ready and waiting"
-            );
-
-
-            connectToSignalingServer();
-
-        } catch (error) {
-
-            console.error(
-                "Camera error:",
-                error
-            );
-
-
-            setStatus(
-                "Camera error: " +
-                error.message
-            );
-
-
-            alert(
-                "Unable to access camera.\n\n" +
-                error.message
+            throw new Error(
+                "Camera API is not available"
             );
         }
+
+
+        if (localStream) {
+
+            localStream
+                .getTracks()
+                .forEach(
+                    function (track) {
+                        track.stop();
+                    }
+                );
+        }
+
+
+        localStream =
+            await navigator.mediaDevices
+                .getUserMedia({
+
+                    video: {
+                        facingMode: {
+                            ideal:
+                                currentCameraFacing
+                        }
+                    },
+
+                    audio: true
+
+                });
+
+
+        localVideo.srcObject =
+            localStream;
+
+
+        await localVideo.play();
+
+
+        createOfferButton.disabled =
+            false;
+
+
+        setStatus(
+            "Camera ready and waiting"
+        );
+
+
+        connectToSignalingServer();
+
+    } catch (error) {
+
+        console.error(
+            "Camera error:",
+            error
+        );
+
+
+        setStatus(
+            "Camera error: " +
+            error.message
+        );
+
+
+        alert(
+            "Unable to access camera.\n\n" +
+            error.message
+        );
     }
+}
+
+
+startCameraButton.addEventListener(
+    "click",
+    startCamera
 );
+
+
+/* =========================================
+   START CAMERA FROM REMOTE COMMAND
+========================================= */
+
+async function startCameraFromCommand() {
+
+    /*
+       IMPORTANT:
+       Browsers normally require a user gesture
+       before camera permission can be granted.
+
+       Therefore this works automatically if
+       permission was already granted and the
+       browser allows it.
+
+       Otherwise Android will need the native
+       app version for completely automatic
+       startup.
+    */
+
+    if (localStream) {
+
+        setStatus(
+            "Camera is already running"
+        );
+
+        return;
+    }
+
+
+    setStatus(
+        "Remote request received — starting camera..."
+    );
+
+
+    try {
+
+        await startCamera();
+
+
+        /*
+           If there is already a viewer waiting,
+           create the connection automatically.
+        */
+
+        if (
+            localStream
+        ) {
+
+            await createCameraOffer();
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Remote camera start error:",
+            error
+        );
+    }
+}
+
+
+/* =========================================
+   STOP CAMERA
+========================================= */
+
+function stopCamera() {
+
+    if (localStream) {
+
+        localStream
+            .getTracks()
+            .forEach(
+                function (track) {
+
+                    track.stop();
+
+                }
+            );
+
+        localStream =
+            null;
+    }
+
+
+    localVideo.srcObject =
+        null;
+
+
+    if (peerConnection) {
+
+        peerConnection.close();
+
+        peerConnection =
+            null;
+    }
+
+
+    createOfferButton.disabled =
+        true;
+
+
+    setStatus(
+        "Camera stopped"
+    );
+}
+
+
+/* =========================================
+   SWITCH CAMERA
+========================================= */
+
+async function switchCamera(
+    facingMode
+) {
+
+    if (!localStream) {
+
+        setStatus(
+            "Camera is not running"
+        );
+
+        return;
+    }
+
+
+    try {
+
+        setStatus(
+            facingMode === "user"
+                ? "Switching to front camera..."
+                : "Switching to rear camera..."
+        );
+
+
+        const newStream =
+            await navigator.mediaDevices
+                .getUserMedia({
+
+                    video: {
+                        facingMode:
+                            facingMode
+                    },
+
+                    audio: false
+
+                });
+
+
+        const newVideoTrack =
+            newStream.getVideoTracks()[0];
+
+
+        const oldVideoTrack =
+            localStream.getVideoTracks()[0];
+
+
+        /*
+           Replace camera track inside
+           the existing WebRTC connection.
+        */
+
+        if (peerConnection) {
+
+            const sender =
+                peerConnection
+                    .getSenders()
+                    .find(
+                        function (item) {
+
+                            return (
+                                item.track &&
+                                item.track.kind ===
+                                    "video"
+                            );
+
+                        }
+                    );
+
+
+            if (sender) {
+
+                await sender.replaceTrack(
+                    newVideoTrack
+                );
+            }
+        }
+
+
+        if (oldVideoTrack) {
+
+            oldVideoTrack.stop();
+        }
+
+
+        localStream.removeTrack(
+            oldVideoTrack
+        );
+
+
+        localStream.addTrack(
+            newVideoTrack
+        );
+
+
+        localVideo.srcObject =
+            localStream;
+
+
+        currentCameraFacing =
+            facingMode;
+
+
+        setStatus(
+            facingMode === "user"
+                ? "Front camera active"
+                : "Rear camera active"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Camera switch error:",
+            error
+        );
+
+
+        setStatus(
+            "Unable to switch camera"
+        );
+    }
+}
+
+
+/* =========================================
+   CAMERA AUDIO
+========================================= */
+
+function setCameraAudio(
+    enabled
+) {
+
+    if (!localStream) {
+
+        return;
+    }
+
+
+    localStream
+        .getAudioTracks()
+        .forEach(
+            function (track) {
+
+                track.enabled =
+                    enabled;
+
+            }
+        );
+
+
+    setStatus(
+        enabled
+            ? "Camera microphone enabled"
+            : "Camera microphone muted"
+    );
+}
 
 
 /* =========================================
@@ -684,7 +1378,7 @@ createAnswerButton.addEventListener(
 
 
 /* =========================================
-   CAMERA RECEIVES REQUEST
+   CAMERA RECEIVES VIEWER REQUEST
 ========================================= */
 
 async function handleCameraRequest() {
@@ -706,22 +1400,17 @@ async function handleCameraRequest() {
         );
 
 
-        /*
-           If camera has not been started,
-           the browser cannot silently request
-           camera permission.
-        */
-
         if (!localStream) {
 
             setStatus(
-                "Viewer requested camera — start camera"
+                "Viewer requested camera — camera is off"
             );
 
 
             alert(
-                "A viewer is requesting this camera.\n\n" +
-                "Tap Start Camera to allow the camera."
+                "The viewer requested this camera.\n\n" +
+                "The browser cannot silently grant camera permission.\n\n" +
+                "Tap Start Camera on this phone."
             );
 
 
@@ -729,47 +1418,7 @@ async function handleCameraRequest() {
         }
 
 
-        if (peerConnection) {
-
-            peerConnection.close();
-        }
-
-
-        setStatus(
-            "Viewer detected. Creating connection..."
-        );
-
-
-        createPeerConnection(false);
-
-
-        const offer =
-            await peerConnection.createOffer();
-
-
-        await peerConnection.setLocalDescription(
-            offer
-        );
-
-
-        await sendSignalingMessage({
-
-            type:
-                "offer",
-
-            offer:
-                peerConnection.localDescription
-
-        });
-
-
-        offerOutput.value =
-            "Camera connection sent to viewer";
-
-
-        setStatus(
-            "Camera connection sent"
-        );
+        await createCameraOffer();
 
     } catch (error) {
 
@@ -783,6 +1432,64 @@ async function handleCameraRequest() {
             "Camera connection error"
         );
     }
+}
+
+
+/* =========================================
+   CREATE CAMERA OFFER
+========================================= */
+
+async function createCameraOffer() {
+
+    if (!localStream) {
+
+        return;
+    }
+
+
+    if (peerConnection) {
+
+        peerConnection.close();
+    }
+
+
+    setStatus(
+        "Creating camera connection..."
+    );
+
+
+    createPeerConnection(
+        false
+    );
+
+
+    const offer =
+        await peerConnection.createOffer();
+
+
+    await peerConnection.setLocalDescription(
+        offer
+    );
+
+
+    await sendSignalingMessage({
+
+        type:
+            "offer",
+
+        offer:
+            peerConnection.localDescription
+
+    });
+
+
+    offerOutput.value =
+        "Camera connection sent to viewer";
+
+
+    setStatus(
+        "Camera connection sent"
+    );
 }
 
 
@@ -804,9 +1511,187 @@ createOfferButton.addEventListener(
         }
 
 
-        await handleCameraRequest();
+        await createCameraOffer();
     }
 );
+
+
+/* =========================================
+   PEER CONNECTION
+========================================= */
+
+function createPeerConnection(
+    isViewer
+) {
+
+    peerConnection =
+        new RTCPeerConnection(
+            configuration
+        );
+
+
+    /*
+       CAMERA SENDS CAMERA/MICROPHONE
+    */
+
+    if (
+        !isViewer &&
+        localStream
+    ) {
+
+        localStream
+            .getTracks()
+            .forEach(
+                function (track) {
+
+                    peerConnection.addTrack(
+                        track,
+                        localStream
+                    );
+
+                }
+            );
+    }
+
+
+    /*
+       VIEWER RECEIVES CAMERA
+    */
+
+    peerConnection.ontrack =
+        function (event) {
+
+            console.log(
+                "Remote media received"
+            );
+
+
+            if (
+                event.streams &&
+                event.streams[0]
+            ) {
+
+                remoteVideo.srcObject =
+                    event.streams[0];
+
+
+                remoteVideo
+                    .play()
+                    .catch(
+                        function (error) {
+
+                            console.log(
+                                "Video playback waiting:",
+                                error
+                            );
+
+                        }
+                    );
+            }
+        };
+
+
+    /*
+       ICE
+    */
+
+    peerConnection.onicecandidate =
+        function (event) {
+
+            if (
+                event.candidate
+            ) {
+
+                sendSignalingMessage({
+
+                    type:
+                        "candidate",
+
+                    candidate:
+                        event.candidate
+
+                });
+            }
+        };
+
+
+    /*
+       REAL WEBRTC STATUS
+    */
+
+    peerConnection.onconnectionstatechange =
+        function () {
+
+            const state =
+                peerConnection.connectionState;
+
+
+            console.log(
+                "WebRTC state:",
+                state
+            );
+
+
+            if (
+                state ===
+                "connected"
+            ) {
+
+                setStatus(
+                    "📹 Live camera connected"
+                );
+
+            }
+
+
+            else if (
+                state ===
+                "connecting"
+            ) {
+
+                setStatus(
+                    "Connecting video..."
+                );
+
+            }
+
+
+            else if (
+                state ===
+                "disconnected"
+            ) {
+
+                setStatus(
+                    "Video connection interrupted"
+                );
+
+            }
+
+
+            else if (
+                state ===
+                "failed"
+            ) {
+
+                setStatus(
+                    "Video connection failed"
+                );
+
+            }
+
+
+            else if (
+                state ===
+                "closed"
+            ) {
+
+                setStatus(
+                    "Video connection closed"
+                );
+
+            }
+        };
+}
 
 
 /* =========================================
@@ -840,7 +1725,9 @@ async function handleIncomingOffer(
         );
 
 
-        createPeerConnection(true);
+        createPeerConnection(
+            true
+        );
 
 
         await peerConnection.setRemoteDescription(
@@ -958,7 +1845,7 @@ async function handleIncomingCandidate(
 
 
 /* =========================================
-   OLD MANUAL CAMERA BUTTON
+   OLD CONNECT BUTTON
 ========================================= */
 
 connectCameraButton.addEventListener(
@@ -968,6 +1855,7 @@ connectCameraButton.addEventListener(
         alert(
             "The viewer now requests the camera automatically."
         );
+
     }
 );
 
@@ -1053,6 +1941,20 @@ createOfferButton.disabled =
 
 connectCameraButton.disabled =
     true;
+
+
+/* =========================================
+   CREATE CONTROLS
+========================================= */
+
+createCameraControls();
+
+createViewerControls();
+
+
+/* =========================================
+   READY
+========================================= */
 
 setStatus(
     "Ready"
