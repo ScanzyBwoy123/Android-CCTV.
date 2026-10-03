@@ -854,7 +854,7 @@ if (
                     "request-camera"
                 ) {
 
-                    await handleCameraRequest();
+                    await handleCameraRequest(data);
 
                     return;
                 }
@@ -1771,7 +1771,7 @@ createAnswerButton.addEventListener(
    CAMERA RECEIVES VIEWER REQUEST
 ========================================= */
 
-async function handleCameraRequest() {
+async function handleCameraRequest(data) {
 
     if (
         cameraSection.classList.contains(
@@ -1784,8 +1784,25 @@ async function handleCameraRequest() {
     }
 
 
+    // Only respond to requests for this camera
+    if (
+        data.cameraId &&
+        data.cameraId !== CAMERA_ID
+    ) {
+
+        console.log(
+            "Ignoring request for another camera:",
+            data.cameraId
+        );
+
+        return;
+
+    }
+
+
     console.log(
-        "Viewer requested camera"
+        "Viewer requested this camera:",
+        CAMERA_ID
     );
 
 
@@ -1803,8 +1820,6 @@ async function handleCameraRequest() {
     await createCameraOffer();
 
 }
-
-
 /* =========================================
    CREATE CAMERA OFFER
    INTERNAL ONLY
