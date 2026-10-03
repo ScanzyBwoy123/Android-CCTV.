@@ -450,7 +450,7 @@ function createViewerControls() {
 
         }
     );
-
+}
 
 /* =========================================
    CAMERA MODE
