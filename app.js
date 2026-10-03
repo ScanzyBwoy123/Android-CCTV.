@@ -1801,7 +1801,7 @@ async function handleCameraRequest(data) {
 
     // Only respond to requests for this camera
     if (
-        data.cameraId &&
+        data.targetCameraId &&
         data.cameraId !== CAMERA_ID
     ) {
 
