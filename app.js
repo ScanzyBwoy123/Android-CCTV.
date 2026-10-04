@@ -1,148 +1,3 @@
-/* =========================================
-   AUTHENTICATION GATE
-   ========================================= */
-
-let currentUser = null;
-
-const authSection =
-    document.getElementById("authSection");
-
-const signInForm =
-    document.getElementById("signInForm");
-
-const signUpForm =
-    document.getElementById("signUpForm");
-
-const cameraModeButton =
-    document.getElementById("cameraModeButton");
-
-const viewerModeButton =
-    document.getElementById("viewerModeButton");
-
-const cameraMode =
-    document.getElementById("cameraMode");
-
-const viewerMode =
-    document.getElementById("viewerMode");
-
-
-function showLoggedOutState() {
-
-    currentUser = null;
-
-    if (authSection) {
-        authSection.style.display = "flex";
-    }
-
-    if (cameraModeButton) {
-        cameraModeButton.style.display = "none";
-    }
-
-    if (viewerModeButton) {
-        viewerModeButton.style.display = "none";
-    }
-
-    if (cameraMode) {
-        cameraMode.classList.add("hidden");
-    }
-
-    if (viewerMode) {
-        viewerMode.classList.add("hidden");
-    }
-}
-
-
-function showLoggedInState(user) {
-
-    currentUser = user;
-
-    if (authSection) {
-        authSection.style.display = "none";
-    }
-
-    if (cameraModeButton) {
-        cameraModeButton.style.display = "";
-    }
-
-    if (viewerModeButton) {
-        viewerModeButton.style.display = "";
-    }
-
-    if (cameraMode) {
-        cameraMode.classList.remove("hidden");
-    }
-}
-
-
-/* Check the current Supabase session */
-
-async function checkAuthentication() {
-
-    try {
-
-        const {
-            data,
-            error
-        } = await supabaseClient.auth.getSession();
-
-        if (error) {
-            console.error(
-                "Authentication check failed:",
-                error
-            );
-
-            showLoggedOutState();
-            return;
-        }
-
-        if (data.session) {
-
-            showLoggedInState(
-                data.session.user
-            );
-
-        } else {
-
-            showLoggedOutState();
-
-        }
-
-    } catch (error) {
-
-        console.error(
-            "Authentication error:",
-            error
-        );
-
-        showLoggedOutState();
-    }
-}
-
-
-/* Listen for authentication changes */
-
-supabaseClient.auth.onAuthStateChange(
-    function (event, session) {
-
-        if (session) {
-
-            showLoggedInState(
-                session.user
-            );
-
-        } else {
-
-            showLoggedOutState();
-
-        }
-
-    }
-);
-
-
-/* Run authentication check */
-
-checkAuthentication();
 let localStream = null;
 let peerConnection = null;
 let signalingChannel = null;
@@ -408,7 +263,139 @@ const supabaseClient =
         SUPABASE_URL,
         SUPABASE_PUBLISHABLE_KEY
     );
+/* =========================================
+   AUTHENTICATION GATE
+   ========================================= */
 
+let currentUser = null;
+
+const authSection =
+    document.getElementById("authSection");
+
+const signInForm =
+    document.getElementById("signInForm");
+
+const signUpForm =
+    document.getElementById("signUpForm");
+
+const protectedApp =
+    document.getElementById("protectedApp");
+
+
+function showLoggedOutState() {
+
+    currentUser = null;
+
+    /* Show authentication */
+
+    if (authSection) {
+        authSection.style.display = "flex";
+    }
+
+    /* Hide the entire CCTV application */
+
+    if (protectedApp) {
+        protectedApp.style.display = "none";
+    }
+}
+
+
+function showLoggedInState(user) {
+
+    currentUser = user;
+
+    /* Hide authentication */
+
+    if (authSection) {
+        authSection.style.display = "none";
+    }
+
+    /* Show the entire CCTV application */
+
+    if (protectedApp) {
+        protectedApp.style.display = "";
+    }
+}
+
+
+/* =========================================
+   CHECK CURRENT LOGIN SESSION
+   ========================================= */
+
+async function checkAuthentication() {
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+        await supabaseClient.auth.getSession();
+
+        if (error) {
+
+            console.error(
+                "Authentication check failed:",
+                error
+            );
+
+            showLoggedOutState();
+
+            return;
+        }
+
+        if (data.session) {
+
+            showLoggedInState(
+                data.session.user
+            );
+
+        } else {
+
+            showLoggedOutState();
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Authentication error:",
+            error
+        );
+
+        showLoggedOutState();
+    }
+}
+
+
+/* =========================================
+   LISTEN FOR LOGIN / LOGOUT
+   ========================================= */
+
+supabaseClient.auth.onAuthStateChange(
+    function (event, session) {
+
+        if (session) {
+
+            showLoggedInState(
+                session.user
+            );
+
+        } else {
+
+            showLoggedOutState();
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   START AUTHENTICATION CHECK
+   ========================================= */
+
+checkAuthentication();
 
 /* =========================================
    DOM
