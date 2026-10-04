@@ -945,16 +945,11 @@ async function registerCameraWithSupabase() {
         } =
         await supabaseClient
             .from("cameras")
-            .upsert(
-                {
-                    user_id: currentUser.id,
-                    camera_id: CAMERA_ID,
-                    name: "Android Camera"
-                },
-                {
-                    onConflict: "camera_id"
-                }
-            )
+         .insert({
+    user_id: currentUser.id,
+    camera_id: CAMERA_ID,
+    name: "Android Camera"
+})
             .select()
             .single();
 
