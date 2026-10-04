@@ -2268,8 +2268,10 @@ async function requestCamera() {
 setViewerStatus(
     "Waiting for camera..."
 );
-if (createAnswerButton) {
 
+} // CLOSE requestCamera()
+
+if (createAnswerButton) {
     createAnswerButton.addEventListener(
         "click",
         function () {
