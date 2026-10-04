@@ -695,21 +695,20 @@ if (signInButton) {
 
                 if (data.session) {
 
-                    authMessage.textContent =
-                        "Login successful.";
+    authMessage.textContent =
+        "Login successful.";
 
-                    /*
-                     * The existing auth listener
-                     * will show the CCTV application.
-                     */
+    showLoggedInState(
+        data.session.user
+    );
 
-                    showLoggedInState(
-    data.session.user
-);
+    await registerCameraWithSupabase();
 
-await registerCameraWithSupabase();
+    await requestCameraPairing(
+        CAMERA_ID
+    );
 
-                }
+}
 
 
             } catch (error) {
