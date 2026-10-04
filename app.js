@@ -704,8 +704,10 @@ if (signInButton) {
                      */
 
                     showLoggedInState(
-                        data.session.user
-                    );
+    data.session.user
+);
+
+await registerCameraWithSupabase();
 
                 }
 
