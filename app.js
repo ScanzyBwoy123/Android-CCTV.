@@ -396,6 +396,208 @@ supabaseClient.auth.onAuthStateChange(
    ========================================= */
 
 checkAuthentication();
+/* =========================================
+   AUTHENTICATION FORM SWITCHING
+   ========================================= */
+
+const showSignUpButton =
+    document.getElementById("showSignUpButton");
+
+const showSignInButton =
+    document.getElementById("showSignInButton");
+
+
+if (showSignUpButton) {
+
+    showSignUpButton.addEventListener(
+        "click",
+        function () {
+
+            if (signInForm) {
+                signInForm.classList.add("hidden");
+            }
+
+            if (signUpForm) {
+                signUpForm.classList.remove("hidden");
+            }
+
+        }
+    );
+
+}
+
+
+if (showSignInButton) {
+
+    showSignInButton.addEventListener(
+        "click",
+        function () {
+
+            if (signUpForm) {
+                signUpForm.classList.add("hidden");
+            }
+
+            if (signInForm) {
+                signInForm.classList.remove("hidden");
+            }
+
+        }
+    );
+
+}
+
+
+/* =========================================
+   CREATE ACCOUNT
+   ========================================= */
+
+const signUpButton =
+    document.getElementById("signUpButton");
+
+const signUpEmail =
+    document.getElementById("signUpEmail");
+
+const signUpPassword =
+    document.getElementById("signUpPassword");
+
+const signUpConfirmPassword =
+    document.getElementById(
+        "signUpConfirmPassword"
+    );
+
+const signUpMessage =
+    document.getElementById("signUpMessage");
+
+
+if (signUpButton) {
+
+    signUpButton.addEventListener(
+        "click",
+        async function () {
+
+            const email =
+                signUpEmail.value.trim();
+
+            const password =
+                signUpPassword.value;
+
+            const confirmPassword =
+                signUpConfirmPassword.value;
+
+
+            /* Validate email */
+
+            if (!email) {
+
+                signUpMessage.textContent =
+                    "Please enter your email address.";
+
+                return;
+            }
+
+
+            /* Validate password */
+
+            if (!password) {
+
+                signUpMessage.textContent =
+                    "Please create a password.";
+
+                return;
+            }
+
+
+            /* Password length */
+
+            if (password.length < 6) {
+
+                signUpMessage.textContent =
+                    "Password must be at least 6 characters.";
+
+                return;
+            }
+
+
+            /* Confirm password */
+
+            if (password !== confirmPassword) {
+
+                signUpMessage.textContent =
+                    "Passwords do not match.";
+
+                return;
+            }
+
+
+            signUpButton.disabled = true;
+
+            signUpButton.textContent =
+                "Creating Account...";
+
+            signUpMessage.textContent =
+                "Creating your account...";
+
+
+            try {
+
+                const {
+                    data,
+                    error
+                } =
+                await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password
+                });
+
+
+                if (error) {
+
+                    signUpMessage.textContent =
+                        error.message;
+
+                    return;
+                }
+
+
+                /*
+                 * Account created successfully.
+                 */
+
+                if (data.user) {
+
+                    signUpMessage.textContent =
+                        "Account created successfully! You can now sign in.";
+
+                    signUpEmail.value = "";
+                    signUpPassword.value = "";
+                    signUpConfirmPassword.value = "";
+
+                }
+
+
+            } catch (error) {
+
+                console.error(
+                    "Sign up error:",
+                    error
+                );
+
+                signUpMessage.textContent =
+                    "Unable to create account. Please try again.";
+
+            } finally {
+
+                signUpButton.disabled = false;
+
+                signUpButton.textContent =
+                    "Create Account";
+
+            }
+
+        }
+    );
+
+}
 
 /* =========================================
    DOM
