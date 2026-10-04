@@ -735,14 +735,13 @@ if (signInButton) {
 
 }
 /* =========================================
-   SIGN OUT
-   ========================================= */
+   LOGOUT
+========================================= */
 
 const logoutButton =
     document.getElementById(
         "logoutButton"
     );
-
 
 if (logoutButton) {
 
@@ -750,9 +749,11 @@ if (logoutButton) {
         "click",
         async function () {
 
+            console.log(
+                "Logout button clicked."
+            );
+
             logoutButton.disabled = true;
-            logoutButton.textContent =
-                "Logging Out...";
 
             try {
 
@@ -769,6 +770,7 @@ if (logoutButton) {
                     );
 
                     logoutButton.disabled = false;
+
                     logoutButton.textContent =
                         "Log Out";
 
@@ -779,6 +781,23 @@ if (logoutButton) {
                     "User signed out successfully."
                 );
 
+                /*
+                 * Immediately return the UI
+                 * to the logged-out state.
+                 */
+
+                showLoggedOutState();
+
+                /*
+                 * Reset the logout button text
+                 * so it is ready after the next login.
+                 */
+
+                logoutButton.disabled = false;
+
+                logoutButton.textContent =
+                    "Log Out";
+
             } catch (error) {
 
                 console.error(
@@ -787,13 +806,12 @@ if (logoutButton) {
                 );
 
                 logoutButton.disabled = false;
+
                 logoutButton.textContent =
                     "Log Out";
             }
-
         }
     );
-
 }
 
 /* =========================================
