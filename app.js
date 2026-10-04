@@ -955,6 +955,20 @@ async function registerCameraWithSupabase() {
 
         if (error) {
 
+    if (
+        error.code === "23505" &&
+        error.message.includes(
+            "cameras_camera_id_key"
+        )
+    ) {
+
+        console.log(
+            "Camera already registered."
+        );
+
+        return;
+    }
+
     console.error(
         "Camera registration failed:",
         error
