@@ -922,7 +922,66 @@ function setCameraOnlineStatus(
             : "🔴 Offline";
 }
 
+/* =========================================
+   REGISTER CAMERA WITH SUPABASE
+========================================= */
 
+async function registerCameraWithSupabase() {
+
+    if (!currentUser) {
+        console.log(
+            "Camera registration skipped: user not logged in."
+        );
+        return;
+    }
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+        await supabaseClient
+            .from("cameras")
+            .upsert(
+                {
+                    user_id: currentUser.id,
+                    camera_id: CAMERA_ID,
+                    name: "Android Camera"
+                },
+                {
+                    onConflict: "camera_id"
+                }
+            )
+            .select()
+            .single();
+
+
+        if (error) {
+
+            console.error(
+                "Camera registration failed:",
+                error
+            );
+
+            return;
+        }
+
+
+        console.log(
+            "Camera registered with Supabase:",
+            data
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Camera registration error:",
+            error
+        );
+
+    }
+}
 /* =========================================
    MODE SWITCHING
 ========================================= */
@@ -941,15 +1000,17 @@ function showCameraMode() {
         "active"
     );
 
-    viewerModeButton.classList.remove(
-        "active"
-    );
+viewerModeButton.classList.remove(
+    "active"
+);
 
-    setStatus(
-        "Camera mode"
-    );
+setStatus(
+    "Camera mode"
+);
 
-    connectToSignalingServer();
+registerCameraWithSupabase();
+
+connectToSignalingServer();
 }
 
 
