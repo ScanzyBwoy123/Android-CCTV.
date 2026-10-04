@@ -525,3 +525,42 @@ video {
     }
 
 }
+/* =========================================
+   LOGOUT BUTTON
+   ========================================= */
+
+.logout-button {
+    display: block;
+    width: 100%;
+    max-width: 220px;
+    margin: 0 auto 20px auto;
+    padding: 12px 20px;
+
+    background: #dc2626;
+    color: #ffffff;
+
+    border: none;
+    border-radius: 10px;
+
+    font-size: 15px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        transform 0.1s ease;
+}
+
+.logout-button:hover {
+    background: #b91c1c;
+}
+
+.logout-button:active {
+    transform: scale(0.98);
+}
+
+.logout-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
