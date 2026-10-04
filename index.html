@@ -39,10 +39,52 @@
 
     <main>
 
-        <!-- MODE SELECTOR -->
+<section id="authSection" class="auth-section">
 
-        <section class="mode-selector">
+    <div class="auth-card">
 
+        <h2>🔐 Sign in</h2>
+
+        <p>
+            Sign in to securely access your CCTV cameras.
+        </p>
+
+        <input
+            type="email"
+            id="authEmail"
+            placeholder="Email address"
+            autocomplete="email"
+        >
+
+        <input
+            type="password"
+            id="authPassword"
+            placeholder="Password"
+            autocomplete="current-password"
+        >
+
+        <button
+            type="button"
+            id="signInButton"
+            class="primary-button"
+        >
+            Sign In
+        </button>
+
+        <p
+            id="authMessage"
+            class="connection-message"
+        >
+            Please sign in to continue.
+        </p>
+
+    </div>
+
+</section>
+
+<!-- MODE SELECTOR -->
+
+<section class="mode-selector">
             <button
                 id="cameraModeButton"
             >
