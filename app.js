@@ -299,7 +299,7 @@ function showLoggedOutState() {
     }
 }
 
-
+console.log("AUTH SECTION LOADED");
 function showLoggedInState(user) {
 
     currentUser = user;
