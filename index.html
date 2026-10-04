@@ -43,40 +43,120 @@
 
     <div class="auth-card">
 
-        <h2>🔐 Sign in</h2>
+        <!-- SIGN IN FORM -->
 
-        <p>
-            Sign in to securely access your CCTV cameras.
-        </p>
+        <div id="signInForm">
 
-        <input
-            type="email"
-            id="authEmail"
-            placeholder="Email address"
-            autocomplete="email"
+            <h2>🔐 Welcome Back</h2>
+
+            <p>
+                Sign in to access your CCTV cameras.
+            </p>
+
+            <input
+                type="email"
+                id="authEmail"
+                placeholder="Email address"
+                autocomplete="email"
+            >
+
+            <input
+                type="password"
+                id="authPassword"
+                placeholder="Password"
+                autocomplete="current-password"
+            >
+
+            <button
+                type="button"
+                id="signInButton"
+                class="primary-button"
+            >
+                Sign In
+            </button>
+
+            <p
+                id="authMessage"
+                class="connection-message"
+            >
+                Please sign in to continue.
+            </p>
+
+            <p class="auth-switch">
+                Don't have an account?
+                <button
+                    type="button"
+                    id="showSignUpButton"
+                    class="text-button"
+                >
+                    Create Account
+                </button>
+            </p>
+
+        </div>
+
+
+        <!-- CREATE ACCOUNT FORM -->
+
+        <div
+            id="signUpForm"
+            class="hidden"
         >
 
-        <input
-            type="password"
-            id="authPassword"
-            placeholder="Password"
-            autocomplete="current-password"
-        >
+            <h2>🆕 Create Account</h2>
 
-        <button
-            type="button"
-            id="signInButton"
-            class="primary-button"
-        >
-            Sign In
-        </button>
+            <p>
+                Create your account to securely manage your CCTV cameras.
+            </p>
 
-        <p
-            id="authMessage"
-            class="connection-message"
-        >
-            Please sign in to continue.
-        </p>
+            <input
+                type="email"
+                id="signUpEmail"
+                placeholder="Email address"
+                autocomplete="email"
+            >
+
+            <input
+                type="password"
+                id="signUpPassword"
+                placeholder="Create password"
+                autocomplete="new-password"
+            >
+
+            <input
+                type="password"
+                id="signUpConfirmPassword"
+                placeholder="Confirm password"
+                autocomplete="new-password"
+            >
+
+            <button
+                type="button"
+                id="signUpButton"
+                class="primary-button"
+            >
+                Create Account
+            </button>
+
+            <p
+                id="signUpMessage"
+                class="connection-message"
+            >
+                Create your account to get started.
+            </p>
+
+            <p class="auth-switch">
+                Already have an account?
+                <button
+                    type="button"
+                    id="showSignInButton"
+                    class="text-button"
+                >
+                    Sign In
+                </button>
+            </p>
+
+        </div>
 
     </div>
 
