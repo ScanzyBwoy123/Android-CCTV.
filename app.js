@@ -961,13 +961,18 @@ async function registerCameraWithSupabase() {
 
         if (error) {
 
-            console.error(
-                "Camera registration failed:",
-                error
-            );
+    console.error(
+        "Camera registration failed:",
+        error
+    );
 
-            return;
-        }
+    alert(
+        "Camera registration failed:\n\n" +
+        error.message
+    );
+
+    return;
+}
 
 
         console.log(
