@@ -2253,21 +2253,21 @@ async function requestCamera() {
 
     await sendSignalingMessage({
 
-        type:
-            "request-camera",
+    type:
+        "request-camera",
 
-        targetCameraId:
-            selectedCameraId
+    targetCameraId:
+        selectedCameraId,
 
-    });
+    viewerUserId:
+        currentUser.id
 
-
-    setViewerStatus(
-        "Waiting for camera..."
-    );
-}
+});
 
 
+setViewerStatus(
+    "Waiting for camera..."
+);
 if (createAnswerButton) {
 
     createAnswerButton.addEventListener(
