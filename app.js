@@ -2282,7 +2282,7 @@ if (createAnswerButton) {
 
 
 /* =========================================
-   CAMERA RECEIVES REQUEST
+   HANDLE CAMERA REQUEST
 ========================================= */
 
 async function handleCameraRequest(
@@ -2314,30 +2314,194 @@ async function handleCameraRequest(
     }
 
 
-    connectedRemoteDeviceId =
-        data.cameraId;
+    /*
+     * The Viewer must identify itself.
+     * Without a viewer user ID, we cannot
+     * verify its pairing permission.
+     */
 
+    if (
+        !data.viewerUserId
+    ) {
 
-    console.log(
-        "Request matched camera:",
-        CAMERA_ID
-    );
-
-
-    if (!localStream) {
+        console.warn(
+            "Camera request rejected: no viewer user ID."
+        );
 
         setStatus(
-            "Viewer requested camera — start camera"
+            "Unauthorized viewer"
         );
 
         return;
     }
 
 
-    await createCameraOffer();
+    /*
+     * Check the pairing status in Supabase.
+     */
+
+    try {
+
+        const {
+            data: pairing,
+            error
+        } =
+        await supabaseClient
+            .from("camera_pairings")
+            .select(
+                "id, status"
+            )
+            .eq(
+                "camera_id",
+                CAMERA_ID
+            )
+            .eq(
+                "viewer_user_id",
+                data.viewerUserId
+            )
+            .maybeSingle();
+
+
+        if (error) {
+
+            console.error(
+                "Pairing authorization check failed:",
+                error
+            );
+
+            setStatus(
+                "Unable to verify viewer"
+            );
+
+            return;
+        }
+
+
+        /*
+         * No pairing exists.
+         */
+
+        if (!pairing) {
+
+            console.warn(
+                "Viewer has no pairing."
+            );
+
+            setStatus(
+                "Viewer not authorized"
+            );
+
+            return;
+        }
+
+
+        /*
+         * PENDING = DO NOT CONNECT
+         */
+
+        if (
+            pairing.status ===
+            "pending"
+        ) {
+
+            console.log(
+                "Pairing is pending. Connection rejected."
+            );
+
+            setStatus(
+                "Pairing request pending"
+            );
+
+            return;
+        }
+
+
+        /*
+         * REVOKED = DO NOT CONNECT
+         */
+
+        if (
+            pairing.status ===
+            "revoked"
+        ) {
+
+            console.log(
+                "Pairing has been revoked."
+            );
+
+            setStatus(
+                "Viewer access revoked"
+            );
+
+            return;
+        }
+
+
+        /*
+         * ONLY APPROVED CAN CONTINUE
+         */
+
+        if (
+            pairing.status !==
+            "approved"
+        ) {
+
+            console.warn(
+                "Unknown pairing status:",
+                pairing.status
+            );
+
+            setStatus(
+                "Viewer not authorized"
+            );
+
+            return;
+        }
+
+
+        /*
+         * APPROVED
+         */
+
+        console.log(
+            "Viewer pairing approved."
+        );
+
+
+        connectedRemoteDeviceId =
+            data.cameraId;
+
+
+        console.log(
+            "Request matched camera:",
+            CAMERA_ID
+        );
+
+
+        if (!localStream) {
+
+            setStatus(
+                "Viewer authorized — start camera"
+            );
+
+            return;
+        }
+
+
+        await createCameraOffer();
+
+    } catch (error) {
+
+        console.error(
+            "Pairing authorization error:",
+            error
+        );
+
+        setStatus(
+            "Authorization error"
+        );
+    }
 }
-
-
 /* =========================================
    CREATE CAMERA OFFER
 ========================================= */
