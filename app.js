@@ -598,6 +598,141 @@ if (signUpButton) {
     );
 
 }
+/* =========================================
+   SIGN IN
+========================================= */
+
+const signInButton =
+    document.getElementById(
+        "signInButton"
+    );
+
+const authEmail =
+    document.getElementById(
+        "authEmail"
+    );
+
+const authPassword =
+    document.getElementById(
+        "authPassword"
+    );
+
+const authMessage =
+    document.getElementById(
+        "authMessage"
+    );
+
+
+if (signInButton) {
+
+    signInButton.addEventListener(
+        "click",
+        async function () {
+
+            const email =
+                authEmail.value.trim();
+
+            const password =
+                authPassword.value;
+
+
+            /* Validate email */
+
+            if (!email) {
+
+                authMessage.textContent =
+                    "Please enter your email address.";
+
+                return;
+            }
+
+
+            /* Validate password */
+
+            if (!password) {
+
+                authMessage.textContent =
+                    "Please enter your password.";
+
+                return;
+            }
+
+
+            signInButton.disabled = true;
+
+            signInButton.textContent =
+                "Signing In...";
+
+            authMessage.textContent =
+                "Checking your account...";
+
+
+            try {
+
+                const {
+                    data,
+                    error
+                } =
+                await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+
+                if (error) {
+
+                    console.error(
+                        "Sign in error:",
+                        error
+                    );
+
+                    authMessage.textContent =
+                        error.message;
+
+                    return;
+                }
+
+
+                if (data.session) {
+
+                    authMessage.textContent =
+                        "Login successful.";
+
+                    /*
+                     * The existing auth listener
+                     * will show the CCTV application.
+                     */
+
+                    showLoggedInState(
+                        data.session.user
+                    );
+
+                }
+
+
+            } catch (error) {
+
+                console.error(
+                    "Sign in error:",
+                    error
+                );
+
+                authMessage.textContent =
+                    "Unable to sign in. Please try again.";
+
+            } finally {
+
+                signInButton.disabled = false;
+
+                signInButton.textContent =
+                    "Sign In";
+
+            }
+
+        }
+    );
+
+}
 
 /* =========================================
    DOM
