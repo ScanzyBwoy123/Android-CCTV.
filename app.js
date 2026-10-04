@@ -940,7 +940,6 @@ function setCameraOnlineStatus(
             ? "🟢 Online"
             : "🔴 Offline";
 }
-
 /* =========================================
    REGISTER CAMERA WITH SUPABASE
 ========================================= */
@@ -948,13 +947,67 @@ function setCameraOnlineStatus(
 async function registerCameraWithSupabase() {
 
     if (!currentUser) {
+
         console.log(
             "Camera registration skipped: user not logged in."
         );
+
         return;
     }
 
     try {
+
+        /*
+         * First check whether this camera
+         * is already registered for this user.
+         */
+
+        const {
+            data: existingCamera,
+            error: checkError
+        } =
+        await supabaseClient
+            .from("cameras")
+            .select("id, camera_id, name")
+            .eq(
+                "camera_id",
+                CAMERA_ID
+            )
+            .eq(
+                "user_id",
+                currentUser.id
+            )
+            .maybeSingle();
+
+        if (checkError) {
+
+            console.error(
+                "Camera registration check failed:",
+                checkError
+            );
+
+            return;
+        }
+
+        /*
+         * Camera already exists.
+         * Nothing else needs to be inserted.
+         */
+
+        if (existingCamera) {
+
+            console.log(
+                "Camera already registered:",
+                existingCamera
+            );
+
+            return;
+        }
+
+        /*
+         * Camera does not exist yet.
+         * Register it.
+         */
 
         const {
             data,
@@ -962,47 +1015,26 @@ async function registerCameraWithSupabase() {
         } =
         await supabaseClient
             .from("cameras")
-         .insert({
-    user_id: currentUser.id,
-    camera_id: CAMERA_ID,
-    name: "Android Camera"
-})
+            .insert({
+                user_id: currentUser.id,
+                camera_id: CAMERA_ID,
+                name: "Android Camera"
+            })
             .select()
             .single();
 
-
         if (error) {
 
-    if (
-        error.code === "23505" &&
-        error.message.includes(
-            "cameras_camera_id_key"
-        )
-    ) {
+            console.error(
+                "Camera registration failed:",
+                error
+            );
+
+            return;
+        }
 
         console.log(
-            "Camera already registered."
-        );
-
-        return;
-    }
-
-    console.error(
-        "Camera registration failed:",
-        error
-    );
-
-    alert(
-        "Camera registration failed:\n\n" +
-        error.message
-    );
-
-    return;
-}
-
-
-        console.log(
-            "Camera registered with Supabase:",
+            "Camera registered successfully:",
             data
         );
 
@@ -1012,7 +1044,6 @@ async function registerCameraWithSupabase() {
             "Camera registration error:",
             error
         );
-
     }
 }
 /* =========================================
