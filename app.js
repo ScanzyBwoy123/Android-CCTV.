@@ -985,6 +985,66 @@ async function registerCameraWithSupabase() {
     }
 }
 /* =========================================
+   REQUEST CAMERA PAIRING
+========================================= */
+
+async function requestCameraPairing(cameraId) {
+
+    if (!currentUser) {
+        console.log(
+            "Pairing request skipped: user not logged in."
+        );
+        return;
+    }
+
+    if (!cameraId) {
+        console.log(
+            "Pairing request skipped: no camera ID."
+        );
+        return;
+    }
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+        await supabaseClient
+            .from("camera_pairings")
+            .insert({
+                camera_id: cameraId,
+                viewer_user_id: currentUser.id,
+                status: "pending"
+            })
+            .select()
+            .single();
+
+        if (error) {
+
+            console.error(
+                "Pairing request failed:",
+                error
+            );
+
+            return;
+        }
+
+        console.log(
+            "Pairing request created:",
+            data
+        );
+
+    } catch (error) {
+
+        console.error(
+            "Pairing request error:",
+            error
+        );
+
+    }
+}
+/* =========================================
    MODE SWITCHING
 ========================================= */
 
