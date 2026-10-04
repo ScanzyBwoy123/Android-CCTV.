@@ -733,6 +733,67 @@ if (signInButton) {
     );
 
 }
+/* =========================================
+   SIGN OUT
+   ========================================= */
+
+const logoutButton =
+    document.getElementById(
+        "logoutButton"
+    );
+
+
+if (logoutButton) {
+
+    logoutButton.addEventListener(
+        "click",
+        async function () {
+
+            logoutButton.disabled = true;
+            logoutButton.textContent =
+                "Logging Out...";
+
+            try {
+
+                const {
+                    error
+                } =
+                await supabaseClient.auth.signOut();
+
+                if (error) {
+
+                    console.error(
+                        "Sign out error:",
+                        error
+                    );
+
+                    logoutButton.disabled = false;
+                    logoutButton.textContent =
+                        "Log Out";
+
+                    return;
+                }
+
+                console.log(
+                    "User signed out successfully."
+                );
+
+            } catch (error) {
+
+                console.error(
+                    "Sign out error:",
+                    error
+                );
+
+                logoutButton.disabled = false;
+                logoutButton.textContent =
+                    "Log Out";
+            }
+
+        }
+    );
+
+}
 
 /* =========================================
    DOM
