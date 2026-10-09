@@ -2771,10 +2771,11 @@ async function handleIncomingOffer(message) {
 
         // Android currently expects the answer SDP as a string.
         await sendSignalingMessage({
-            type: "answer",
-            answer: peerConnection.localDescription.sdp,
-            targetDeviceId: selectedCameraId
-        });
+    type: "answer",
+    answer: peerConnection.localDescription.sdp,
+    targetCameraId: selectedCameraId,
+    targetDeviceId: selectedCameraId
+});
 
         setViewerStatus("Answer sent. Connecting video...");
 
