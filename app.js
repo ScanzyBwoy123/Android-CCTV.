@@ -2721,101 +2721,72 @@ function createPeerConnection(
    VIEWER RECEIVES OFFER
 ========================================= */
 
-async function handleIncomingOffer(
-    message
-) {
+async function handleIncomingOffer(message) {
 
-    if (
-        viewerSection.classList.contains(
-            "hidden"
-        )
-    ) {
-
+    if (viewerSection.classList.contains("hidden")) {
         return;
     }
 
+    const selectedCameraId = getSavedCameraId();
 
-    const selectedCameraId =
-        getSavedCameraId();
-
-
-    if (
-        message.cameraId !==
-        selectedCameraId
-    ) {
-
+    if (message.cameraId !== selectedCameraId) {
         return;
     }
 
-
-    connectedRemoteDeviceId =
-        message.cameraId;
-
+    connectedRemoteDeviceId = message.cameraId;
 
     try {
 
         if (peerConnection) {
-
             peerConnection.close();
         }
 
+        setViewerStatus("Camera found...");
 
-        setViewerStatus(
-            "Camera found..."
-        );
+        createPeerConnection(true);
 
+        // Accept an offer from Android as either an SDP string
+        // or a normal WebRTC description object.
+        let remoteOffer = message.offer;
 
-        createPeerConnection(
-            true
-        );
+        if (typeof remoteOffer === "string") {
+            remoteOffer = {
+                type: "offer",
+                sdp: remoteOffer
+            };
+        }
 
+        if (
+            !remoteOffer ||
+            !remoteOffer.sdp
+        ) {
+            throw new Error("The camera offer has no SDP.");
+        }
 
-        await peerConnection.setRemoteDescription(
-            message.offer
-        );
+        await peerConnection.setRemoteDescription(remoteOffer);
 
+        const answer = await peerConnection.createAnswer();
 
-        const answer =
-            await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
 
-
-        await peerConnection.setLocalDescription(
-            answer
-        );
-
-
+        // Android currently expects the answer SDP as a string.
         await sendSignalingMessage({
-
-            type:
-                "answer",
-
-            answer:
-                peerConnection.localDescription,
-
-            targetDeviceId:
-                selectedCameraId
-
+            type: "answer",
+            answer: peerConnection.localDescription.sdp,
+            targetDeviceId: selectedCameraId
         });
 
-
-        setViewerStatus(
-            "Connecting video..."
-        );
+        setViewerStatus("Answer sent. Connecting video...");
 
     } catch (error) {
 
-        console.error(
-            "Offer error:",
-            error
-        );
-
+        console.error("Offer error:", error);
 
         setViewerStatus(
-            "Unable to connect"
+            "Unable to connect: " + error.message
         );
     }
 }
-
 
 /* =========================================
    CAMERA RECEIVES ANSWER
